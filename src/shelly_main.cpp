@@ -41,6 +41,7 @@
 #include "HAPPlatform+Init.h"
 #include "HAPPlatformAccessorySetup+Init.h"
 #include "HAPPlatformKeyValueStore+Init.h"
+#include "HAPPlatformMFiTokenAuth+Init.h"
 #include "HAPPlatformServiceDiscovery+Init.h"
 #include "HAPPlatformTCPStreamManager+Init.h"
 
@@ -281,12 +282,19 @@ static bool StartService(bool quiet) {
     }
     return false;
   }
+  HAPDeviceIDString device_id;
+  if (HAPDeviceIDGetAsString(&s_kvs, &device_id) != kHAPError_None) {
+    device_id.stringValue[0] = '\0';
+  }
+  const char *uuid = mgos_sys_config_get_hap_mfi_uuid();
+  if (uuid == NULL) uuid = "<n/a>";
   uint16_t cn;
   if (HAPAccessoryServerGetCN(&s_kvs, &cn) != kHAPError_None) {
     cn = 0;
   }
   if (s_accs.size() == 1) {
-    LOG(LL_INFO, ("=== Starting HAP %s (CN %d)", "server", cn));
+    LOG(LL_INFO, ("=== Starting HAP %s (ID %s, UUID %s, CN %d)", "server",
+                  device_id.stringValue, uuid, cn));
     HAPAccessoryServerStart(&s_server, s_accs.front()->GetHAPAccessory());
   } else {
     if (s_hap_accs.empty()) {
@@ -296,8 +304,9 @@ static bool StartService(bool quiet) {
       s_hap_accs.push_back(nullptr);
       s_hap_accs.shrink_to_fit();
     }
-    LOG(LL_INFO, ("=== Starting HAP %s (CN %d, %d accessories)", "bridge", cn,
-                  (int) s_hap_accs.size()));
+    LOG(LL_INFO,
+        ("=== Starting HAP %s (ID %s, UUID %s, CN %d, %d accessories)",
+         "bridge", device_id.stringValue, uuid, cn, (int) s_hap_accs.size()));
     HAPAccessoryServerStartBridge(&s_server, s_accs.front()->GetHAPAccessory(),
                                   s_hap_accs.data(),
                                   false /* config changed */);
@@ -924,6 +933,9 @@ void InitApp() {
         },
 #endif
   };
+  static struct HAPPlatformMFiTokenAuth s_mfi_auth;
+  HAPPlatformMFiTokenAuthOptions mfi_opts = {};
+  HAPPlatformMFiTokenAuthCreate(&s_mfi_auth, &mfi_opts);
   HAPPlatform platform = {
       .keyValueStore = &s_kvs,
       .accessorySetup = &s_accessory_setup,
@@ -941,7 +953,7 @@ void InitApp() {
       .authentication =
           {
               .mfiHWAuth = nullptr,
-              .mfiTokenAuth = nullptr,
+              .mfiTokenAuth = &s_mfi_auth,
           },
   };
   HAPAccessoryServerCreate(&s_server, &server_options, &platform, &s_callbacks,
