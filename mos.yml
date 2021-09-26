@@ -617,8 +617,8 @@ conds:
       config_schema:
         - ["i2c.enable", true]
         - ["i2c.debug", false]
-        - ["i2c.sda_gpio", 0]
-        - ["i2c.scl_gpio", 2]
+        - ["i2c.sda_gpio", 18]
+        - ["i2c.scl_gpio", 19]
         - ["device.id", "custom16-??????"]
         - ["shelly.name", "custom16-??????"]
         - ["wifi.ap.ssid", "custom16-??????"]
