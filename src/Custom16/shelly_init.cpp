@@ -34,6 +34,7 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
                        std::vector<std::unique_ptr<PowerMeter>> *pms,
                        std::unique_ptr<TempSensor> *sys_temp) {
 
+#ifdef PCF8575
   struct mgos_pcf857x *dout, *din;
 
   if (!(dout = mgos_pcf8575_create(mgos_i2c_get_global(), 0x20, -1))) {
@@ -56,7 +57,47 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
     in->Init();
     inputs->emplace_back(in);
   }
+#endif
+#ifdef PCF8574
+  struct mgos_pcf857x *dout0, *dout1, *din0, *din1;
 
+  if (!(dout0 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x39, -1))) {
+    LOG(LL_ERROR, ("Could not create ouptput PCF857X"));
+    create_failed = true;
+    return;
+  }
+  if (!(dout1 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x38, -1))) {
+    LOG(LL_ERROR, ("Could not create ouptput PCF857X"));
+    create_failed = true;
+    return;
+  }
+  if (!(din0 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x3e, 17))) {
+    LOG(LL_ERROR, ("Could not create input PCF857X"));
+    create_failed = true;
+    return;
+  }
+  if (!(din1 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x3f, 5))) {
+    LOG(LL_ERROR, ("Could not create input PCF857X"));
+    create_failed = true;
+    return;
+  }
+
+  for(int i = 0; i<8; i++) {
+    outputs->emplace_back(new custom16::OutputPCF857xPin(i+1, dout0, i, 1));
+    auto *in = new custom16::InputPCF857xPin(i+1, din0, i, 1, MGOS_GPIO_PULL_UP, (i==0));
+    if(i==0) {
+      in->AddHandler(std::bind(&HandleInputResetSequence, in, 4, _1, _2));
+    }
+    in->Init();
+    inputs->emplace_back(in);
+  }
+  for(int i = 0; i<8; i++) {
+    outputs->emplace_back(new custom16::OutputPCF857xPin(i+9, dout1, i, 1));
+    auto *in = new custom16::InputPCF857xPin(i+9, din1, i, 1, MGOS_GPIO_PULL_UP, (i==0));
+    in->Init();
+    inputs->emplace_back(in);
+  }
+#endif
   (void) sys_temp;
   (void) pms;
 }

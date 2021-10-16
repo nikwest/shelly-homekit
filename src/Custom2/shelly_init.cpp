@@ -29,6 +29,8 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
                        std::unique_ptr<TempSensor> *sys_temp) {
   outputs->emplace_back(new OutputPin(1, 15, 1));
   outputs->emplace_back(new OutputPin(2, 13, 1));
+  outputs->emplace_back(new OutputPin(3, 2, 1));
+  outputs->emplace_back(new OutputPin(4, 0, 1));
   auto *in1 = new InputPin(1, 12, 1, MGOS_GPIO_PULL_UP, true);
   in1->AddHandler(std::bind(&HandleInputResetSequence, in1, 4, _1, _2));
   in1->Init();
@@ -36,6 +38,13 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
   auto *in2 = new InputPin(2, 14, 1, MGOS_GPIO_PULL_UP, false);
   in2->Init();
   inputs->emplace_back(in2);
+  auto *in3 = new InputPin(3, 1, 1, MGOS_GPIO_PULL_UP, false);
+  in3->Init();
+  inputs->emplace_back(in3);
+  auto *in4 = new InputPin(4, 3, 1, MGOS_GPIO_PULL_UP, false);
+  in4->Init();
+  inputs->emplace_back(in4);
+
   (void) sys_temp;
   (void) pms;
 }
@@ -68,7 +77,15 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
                     comps, accs, svr, false /* to_pri_acc */);
     CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
                     comps, accs, svr, false /* to_pri_acc */);
+    CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
+                    comps, accs, svr, false /* to_pri_acc */);
+    CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
+                    comps, accs, svr, false /* to_pri_acc */);
   } else {
+    CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
+                    comps, accs, svr, true /* to_pri_acc */);
+    CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
+                    comps, accs, svr, true /* to_pri_acc */);
     CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
                     comps, accs, svr, true /* to_pri_acc */);
     CreateHAPSwitch(1, mgos_sys_config_get_sw1(), mgos_sys_config_get_in1(),
