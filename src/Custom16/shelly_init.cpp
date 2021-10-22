@@ -19,6 +19,7 @@
 
 #include "shelly_hap_garage_door_opener.hpp"
 #include "shelly_input_pin.hpp"
+#include "shelly_temp_sensor_sht3x.hpp"
 #include "shelly_main.hpp"
 #include "custom16_pcf857x_output.hpp"
 #include "custom16_pcf857x_input.hpp"

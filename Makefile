@@ -11,7 +11,7 @@ V ?= 0
 VERBOSE ?= 0
 RELEASE ?= 0
 RELEASE_SUFFIX ?=
-MOS_BUILD_FLAGS ?=
+MOS_BUILD_FLAGS ?= # --server http://smarthome:8000
 ALLOW_DIRTY_FS ?= 0
 BUILD_DIR ?= ./build_$*
 

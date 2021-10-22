@@ -565,7 +565,11 @@ conds:
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: esp8266-nossl
-        - location: https://github.com/mongoose-os-libs/dash
+        - location: https://github.com/mongoose-os-libs/dash # optional
+        - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
+        - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
+        - location: https://github.com/mongoose-os-libs/sht31-i2c     
+        - location: https://github.com/mongoose-os-libs/i2c
       build_vars:
         FLASH_SIZE: 2097152
         FS_SIZE: 262144
@@ -575,10 +579,15 @@ conds:
         PRODUCT_HW_REV: '"1.0"'
         STOCK_FW_MODEL: '"SHSW-21"'
         MG_ENABLE_SSL: 0
+        HAVE_SHT3X : 1
       config_schema:
         - ["device.id", "custom21-??????"]
         - ["shelly.name", "custom21-??????"]
         - ["wifi.ap.ssid", "custom21-??????"]
+        - ["i2c.debug", false]
+        - ["i2c.enable", true]
+        - ["i2c.sda_gpio", 4]
+        - ["i2c.scl_gpio", 5]
         - ["sw1", "sw", {title: "SW1 settings"}]
         - ["sw1.name", "Shelly SW1"]
         - ["in1", "in", {title: "Input 1 settings"}]
@@ -615,7 +624,8 @@ conds:
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: esp32
         - location: https://github.com/mongoose-os-libs/i2c
-        - location: https://github.com/mongoose-os-libs/pcf857x-i2c       
+        - location: https://github.com/mongoose-os-libs/pcf857x-i2c  
+        - location: https://github.com/mongoose-os-libs/sht31-i2c     
         - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
@@ -626,9 +636,10 @@ conds:
         STOCK_FW_MODEL: '"XXX"'
         MG_ENABLE_SSL: 0
         PCF8574: 1
+        HAVE_SHT3X : 1
       config_schema:
-        - ["i2c.enable", true]
         - ["i2c.debug", false]
+        - ["i2c.enable", true]
         - ["i2c.sda_gpio", 18]
         - ["i2c.scl_gpio", 19]
         - ["i2c1.sda_gpio", 2]

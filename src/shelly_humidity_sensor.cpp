@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "shelly_temp_sensor.hpp"
+#include "shelly_humidity_sensor.hpp"
 
 namespace shelly {
 
@@ -23,14 +23,14 @@ namespace shelly {
 #if MGOS_HAVE_PROMETHEUS_METRICS
 #include "mgos_prometheus_metrics.h"
 
-static void metrics_shelly_temperatur(struct mg_connection *nc, void *user_data) {
-  TempSensor* sensor = (TempSensor*) user_data;
+static void metrics_shelly_humidity(struct mg_connection *nc, void *user_data) {
+  HumiditySensor* sensor = (HumiditySensor*) user_data;
 
-  const auto &temp = sensor->GetTemperature();
-  if(temp.ok()) {
+  const auto &humidity = sensor->GetHumidity();
+  if(humidity.ok()) {
     mgos_prometheus_metrics_printf(
-        nc, GAUGE, "shelly_temperatur", "Temperatur in (Celcius)",
-        "%.3f", temp.ValueOrDie());
+        nc, GAUGE, "shelly_humidity", "Humidity in % (Percent)",
+        "%.2f", humidity.ValueOrDie());
 
   }
   (void) user_data;
@@ -38,13 +38,13 @@ static void metrics_shelly_temperatur(struct mg_connection *nc, void *user_data)
 #endif // MGOS_HAVE_PROMETHEUS_METRICS
 
 
-TempSensor::TempSensor() {
+HumiditySensor::HumiditySensor() {
   #if MGOS_HAVE_PROMETHEUS_METRICS
-    mgos_prometheus_metrics_add_handler(metrics_shelly_temperatur, this);
+    mgos_prometheus_metrics_add_handler(metrics_shelly_humidity, this);
   #endif
 }
 
-TempSensor::~TempSensor() {
+HumiditySensor::~HumiditySensor() {
 }
 
 }  // namespace shelly
