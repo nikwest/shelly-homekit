@@ -20,10 +20,8 @@
 #include "shelly_hap_garage_door_opener.hpp"
 #include "shelly_input_pin.hpp"
 #include "shelly_main.hpp"
-#include "shelly_sensor_sht3x.hpp"
-
-#include "mgos_i2c.h"
-#include "mgos_sht31.h"
+//#include "shelly_sensor_sht3x.hpp"
+#include "shelly_sensor_bme280.hpp"
 
 namespace shelly {
 
@@ -49,7 +47,8 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
   // in4->Init();
   // inputs->emplace_back(in4);
 
-  sys_temp->reset(new SHT3xSensor());
+  //sys_temp->reset(new SHT3xSensor(0, 69));
+  sys_temp->reset(new BME280Sensor(0, 0x76));
 
   (void) pms;
 }

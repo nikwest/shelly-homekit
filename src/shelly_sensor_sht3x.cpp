@@ -27,11 +27,8 @@
 
 namespace shelly {
 
-SHT3xSensor::SHT3xSensor() {
-  struct mgos_i2c *i2c = mgos_i2c_get_global();
-  uint8_t i2caddr = 69;
-
-  LOG(LL_ERROR, ("Creating sensor"));
+SHT3xSensor::SHT3xSensor(int bus_num, uint8_t i2caddr) {
+  struct mgos_i2c *i2c = mgos_i2c_get_bus(bus_num);
 
   if (!i2c) {
     LOG(LL_ERROR, ("I2C bus missing, set i2c.enable=true in mos.yml"));

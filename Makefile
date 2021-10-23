@@ -5,13 +5,13 @@ MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 
 MOS ?= mos
 # Build locally by default if Docker is available.
-LOCAL ?= $(shell which docker> /dev/null && echo 1 || echo 0)
+LOCAL ?= 0 #$(shell which docker> /dev/null && echo 1 || echo 0)
 CLEAN ?= 0
 V ?= 0
 VERBOSE ?= 0
 RELEASE ?= 0
 RELEASE_SUFFIX ?=
-MOS_BUILD_FLAGS ?= # --server http://smarthome:8000
+MOS_BUILD_FLAGS ?= --server http://spacex:8000
 ALLOW_DIRTY_FS ?= 0
 BUILD_DIR ?= ./build_$*
 

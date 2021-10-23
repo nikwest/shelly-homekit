@@ -10,7 +10,7 @@ namespace shelly {
 
 class SHT3xSensor : public TempSensor, public HumiditySensor {
  public:
-  SHT3xSensor();
+  SHT3xSensor(int bus_num, uint8_t i2caddr);
   virtual ~SHT3xSensor();
 
   StatusOr<float> GetTemperature() override;
