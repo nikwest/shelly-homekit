@@ -1,6 +1,14 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Gitter](https://badges.gitter.im/shelly-homekit/community.svg)](https://gitter.im/shelly-homekit/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
+# Personal Branch 
+
+The intention of this branch:
+ * support my custom devices, mainly a ESO32 based 16 channel switch
+ * add features which are not officially supported, in particular 
+    * Prometheus support
+    * external temperature sensors
+    
 # Open Source Apple HomeKit Firmware for Shelly Devices
 
 This firmware exposes Shelly devices as Apple HomeKit accessories.
