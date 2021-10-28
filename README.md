@@ -4,7 +4,7 @@
 # Personal Branch 
 
 The intention of this branch:
- * support my custom devices, mainly a ESO32 based 16 channel switch
+ * support my custom devices, mainly a ESP32 based 16 channel switch
  * add features which are not officially supported, in particular 
     * Prometheus support
     * external temperature sensors
