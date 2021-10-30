@@ -1,3 +1,3 @@
  FROM gitpod/workspace-full
  
- RUN add-apt-repository -y ppa:mongoose-os/mos && apt-get update && apt-get install -y mos
+ RUN sudo add-apt-repository -y ppa:mongoose-os/mos && sudo apt-get update && sudo apt-get install -y mos
