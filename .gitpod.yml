@@ -16,6 +16,7 @@ github:
     addLabel: prebuilt-in-gitpod
     
   tasks:
-  - before: apt-get install mos
-  - init: make
-  
+    - name: Mongoose-OS
+      init: apt-get install mos
+      command: make Custom2
+       
