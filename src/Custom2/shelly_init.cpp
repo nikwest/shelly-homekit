@@ -85,6 +85,7 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
     //                 comps, accs, svr, false /* to_pri_acc */);
     // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
     //                 comps, accs, svr, false /* to_pri_acc */);
+    std::unique_ptr<ShellySensorBase> sw;
   } else {
     // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
     //                 comps, accs, svr, true /* to_pri_acc */);

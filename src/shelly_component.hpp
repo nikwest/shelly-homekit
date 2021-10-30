@@ -36,6 +36,7 @@ class Component {
     kContactSensor = 9,
     kDoorbell = 10,
     kLightBulb = 11,
+    kTemperatureSensor = 12,
     kMax,
   };
 
