@@ -17,6 +17,9 @@ github:
     
 tasks:
   - name: Mongoose-OS
-    init: add-apt-repository ppa:mongoose-os/mos && apt-get update && apt-get install mos
+    init: |
+      add-apt-repository ppa:mongoose-os/mos
+      apt-get update
+      apt-get install mos
     command: make Custom2
 
