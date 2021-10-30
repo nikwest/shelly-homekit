@@ -15,8 +15,8 @@ github:
     # add a label once the prebuild is ready to pull requests (defaults to false)
     addLabel: prebuilt-in-gitpod
     
-  tasks:
-    - name: Mongoose-OS
-      init: apt-get install mos
-      command: make Custom2
-       
+tasks:
+  - name: Mongoose-OS
+    init: apt-get install mos
+    command: make Custom2
+
