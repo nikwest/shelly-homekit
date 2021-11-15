@@ -21,7 +21,8 @@
 #include "shelly_input_pin.hpp"
 #include "shelly_main.hpp"
 //#include "shelly_sensor_sht3x.hpp"
-#include "shelly_sensor_bme280.hpp"
+//#include "shelly_sensor_bme280.hpp"
+#include "shelly_sensor_htu21df.hpp"
 
 namespace shelly {
 
@@ -48,7 +49,8 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
   // inputs->emplace_back(in4);
 
   //sys_temp->reset(new SHT3xSensor(0, 69));
-  sys_temp->reset(new BME280Sensor(0, 0x76));
+  //sys_temp->reset(new BME280Sensor(0, 0x76));
+  sys_temp->reset(new HTU21DFSensor(0, 0x40));
 
   (void) pms;
 }
@@ -85,7 +87,7 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
     //                 comps, accs, svr, false /* to_pri_acc */);
     // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
     //                 comps, accs, svr, false /* to_pri_acc */);
-    std::unique_ptr<ShellySensorBase> sw;
+    //std::unique_ptr<ShellySensorBase> sw;
   } else {
     // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
     //                 comps, accs, svr, true /* to_pri_acc */);

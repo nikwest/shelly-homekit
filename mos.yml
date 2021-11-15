@@ -569,7 +569,8 @@ conds:
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
  #       - location: https://github.com/mongoose-os-libs/sht31-i2c     
-        - location: https://github.com/mongoose-os-libs/bme280
+ #       - location: https://github.com/mongoose-os-libs/bme280
+        - location: https://github.com/mongoose-os-libs/htu21df-i2c
         - location: https://github.com/mongoose-os-libs/i2c
       build_vars:
         FLASH_SIZE: 2097152
@@ -581,7 +582,8 @@ conds:
         STOCK_FW_MODEL: '"SHSW-21"'
         MG_ENABLE_SSL: 0
  #       HAVE_SHT3X : 1
-        HAVE_BME280 : 1
+ #       HAVE_BME280 : 1
+        HAVE_HTU21DF : 1
       config_schema:
         - ["device.id", "custom21-??????"]
         - ["shelly.name", "custom21-??????"]
