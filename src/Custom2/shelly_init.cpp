@@ -23,6 +23,7 @@
 //#include "shelly_sensor_sht3x.hpp"
 //#include "shelly_sensor_bme280.hpp"
 #include "shelly_sensor_htu21df.hpp"
+//#include "shelly_sensor_si7021.hpp"
 
 namespace shelly {
 

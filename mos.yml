@@ -571,6 +571,7 @@ conds:
  #       - location: https://github.com/mongoose-os-libs/sht31-i2c     
  #       - location: https://github.com/mongoose-os-libs/bme280
         - location: https://github.com/mongoose-os-libs/htu21df-i2c
+ #       - location: https://github.com/mongoose-os-libs/si7021-i2c
         - location: https://github.com/mongoose-os-libs/i2c
       build_vars:
         FLASH_SIZE: 2097152
@@ -584,6 +585,7 @@ conds:
  #       HAVE_SHT3X : 1
  #       HAVE_BME280 : 1
         HAVE_HTU21DF : 1
+ #       HAVE_SI7021 : 1  
       config_schema:
         - ["device.id", "custom21-??????"]
         - ["shelly.name", "custom21-??????"]
