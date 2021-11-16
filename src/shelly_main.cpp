@@ -40,6 +40,7 @@
 #include "HAPAccessoryServer+Internal.h"
 #include "HAPPlatform+Init.h"
 #include "HAPPlatformAccessorySetup+Init.h"
+#include "HAPPlatformBLEPeripheralManager+Init.h"
 #include "HAPPlatformKeyValueStore+Init.h"
 #include "HAPPlatformMFiTokenAuth+Init.h"
 #include "HAPPlatformServiceDiscovery+Init.h"
@@ -82,6 +83,32 @@ static HAPIPAccessoryServerStorage s_ip_storage = {
             .numBytes = sizeof(scratch_buf),
         },
 };
+
+#ifdef MGOS_HAVE_BT_COMMON
+// TODO: make dynamic
+static HAPBLEGATTTableElementRef gattTableElements[100];
+static HAPBLESessionCacheElementRef
+    sessionCacheElements[kHAPBLESessionCache_MinElements];
+static HAPSessionRef session;
+static uint8_t procedureBytes[2048];
+static HAPBLEProcedureRef procedures[1];
+
+static HAPPlatformBLEPeripheralManager s_blepm;
+static HAPBLEAccessoryServerStorage s_ble_storage = {
+    .gattTableElements = gattTableElements,
+    .numGATTTableElements = HAPArrayCount(gattTableElements),
+    .sessionCacheElements = sessionCacheElements,
+    .numSessionCacheElements = HAPArrayCount(sessionCacheElements),
+    .session = &session,
+    .procedures = procedures,
+    .numProcedures = HAPArrayCount(procedures),
+    .procedureBuffer =
+        {
+            .bytes = procedureBytes,
+            .numBytes = sizeof procedureBytes,
+        },
+};
+#endif
 
 static HAPPlatformKeyValueStore s_kvs;
 static HAPPlatformAccessorySetup s_accessory_setup;
@@ -517,7 +544,6 @@ static void StatusTimerCB(void *arg) {
                   (unsigned long) mgos_get_free_heap_size(),
                   (unsigned long) mgos_get_heap_size(),
                   (sys_temp.ok() ? sys_temp.ValueOrDie() : 0), status.c_str()));
-    s_cnt = 0;
   }
 #ifdef MGOS_HAVE_WIFI
   if (mgos_sys_config_get_wifi_sta_enable() &&
@@ -825,7 +851,6 @@ extern "C" bool mgos_ota_merge_fs_should_copy_file(const char *old_fs_path,
       "relaydata",
       "index.html",
       "conf9_backup.json",
-      "conf3.json",
       // Obsolete files from previopus versions.
       "axios.min.js.gz",
       "favicon.ico",
@@ -833,6 +858,16 @@ extern "C" bool mgos_ota_merge_fs_should_copy_file(const char *old_fs_path,
       "rpc_acl.json",
       "style.css",
       "style.css.gz",
+      // Plus firmware stuff that we don't need.
+      "bundle.css.gz",
+      "bundle.js.gz",
+      "ca.pem",
+      "index.html",
+      "init.js",
+      "rpc_acl_auth.json",
+      "rpc_acl_no_auth.json",
+      "storage.json",
+      "tzinfo",
   };
   for (const char *skip_fn : s_skip_files) {
     if (strcmp(file_name, skip_fn) == 0) return false;
@@ -956,6 +991,20 @@ void InitApp() {
               .mfiTokenAuth = &s_mfi_auth,
           },
   };
+#ifdef MGOS_HAVE_BT_COMMON
+  // BLE Preipheral Manager.
+  if (mgos_sys_config_get_bt_enable()) {
+    static HAPPlatformBLEPeripheralManagerOptions blepm_opts = {};
+    HAPPlatformBLEPeripheralManagerCreate(&s_blepm, &blepm_opts);
+    platform.ble.blePeripheralManager = &s_blepm;
+    server_options.ble.transport = &kHAPAccessoryServerTransport_BLE;
+    server_options.ble.accessoryServerStorage = &s_ble_storage;
+    server_options.ble.preferredAdvertisingInterval =
+        HAPBLEAdvertisingIntervalCreateFromMilliseconds(417.5f);
+    server_options.ble.preferredNotificationDuration =
+        kHAPBLENotification_MinDuration;
+  }
+#endif
   HAPAccessoryServerCreate(&s_server, &server_options, &platform, &s_callbacks,
                            nullptr /* context */);
 
