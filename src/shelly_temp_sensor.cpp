@@ -29,7 +29,7 @@ static void metrics_shelly_temperatur(struct mg_connection *nc, void *user_data)
   const auto &temp = sensor->GetTemperature();
   if(temp.ok()) {
     mgos_prometheus_metrics_printf(
-        nc, GAUGE, "shelly_temperatur", "Temperatur in (Celcius)",
+        nc, GAUGE, "shelly_temperature", "Temperature in (Celcius)",
         "%.3f", temp.ValueOrDie());
 
   }
