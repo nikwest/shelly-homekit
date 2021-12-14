@@ -18,10 +18,11 @@
 #include <algorithm>
 
 #include "shelly_hap_garage_door_opener.hpp"
+#include "shelly_hap_temperature_sensor.hpp"
 #include "shelly_input_pin.hpp"
 #include "shelly_main.hpp"
-//#include "shelly_sensor_sht3x.hpp"
-//#include "shelly_sensor_bme280.hpp"
+#include "shelly_sensor_sht3x.hpp"
+#include "shelly_sensor_bme280.hpp"
 #include "shelly_sensor_htu21df.hpp"
 //#include "shelly_sensor_si7021.hpp"
 
@@ -51,8 +52,15 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
 
   //sys_temp->reset(new SHT3xSensor(0, 69));
   //sys_temp->reset(new BME280Sensor(0, 0x76));
+#ifdef HAVE_HTU21
   sys_temp->reset(new HTU21DFSensor(0, 0x40));
-
+#endif
+#ifdef HAVE_BME280
+  sys_temp->reset(new BME280Sensor(0, 0x76));
+#endif
+#ifdef HAVE_SHT3X
+  sys_temp->reset(new SHT3xSensor(0, 0x45));
+#endif
   (void) pms;
 }
 
@@ -84,22 +92,28 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
                     comps, accs, svr, false /* to_pri_acc */);
     CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
                     comps, accs, svr, false /* to_pri_acc */);
+    // CreateHAPSensor(3, mgos_sys_config_get_ts1(),
+    //               comps, accs, svr, true /* to_pri_acc */);
     // CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
     //                 comps, accs, svr, false /* to_pri_acc */);
     // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
     //                 comps, accs, svr, false /* to_pri_acc */);
-    //std::unique_ptr<ShellySensorBase> sw;
   } else {
     // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
     //                 comps, accs, svr, true /* to_pri_acc */);
     // CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
     //                 comps, accs, svr, true /* to_pri_acc */);
+    // CreateHAPSensor(3, mgos_sys_config_get_ts1(),
+    //               comps, accs, svr, true /* to_pri_acc */);
     CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
                     comps, accs, svr, true /* to_pri_acc */);
     CreateHAPSwitch(1, mgos_sys_config_get_sw1(), mgos_sys_config_get_in1(),
                     comps, accs, svr, true /* to_pri_acc */);
     std::reverse(comps->begin(), comps->end());
+
   }
+
+ 
 }
 
 }  // namespace shelly

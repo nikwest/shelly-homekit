@@ -52,13 +52,14 @@
 #include "shelly_hap_outlet.hpp"
 #include "shelly_hap_switch.hpp"
 #include "shelly_hap_valve.hpp"
+#include "shelly_hap_sensor.hpp"
 #include "shelly_input.hpp"
 #include "shelly_input_pin.hpp"
 #include "shelly_noisy_input_pin.hpp"
 #include "shelly_output.hpp"
 #include "shelly_rpc_service.hpp"
 #include "shelly_switch.hpp"
-#include "shelly_temp_sensor.hpp"
+#include "shelly_sensor.hpp"
 
 #define NUM_SESSIONS 12
 #define SCRATCH_BUF_SIZE 1536
@@ -266,6 +267,55 @@ void CreateHAPSwitch(int id, const struct mgos_config_sw *sw_cfg,
   }
   if (sw_cfg->in_mode == (int) InMode::kDetached) {
     hap::CreateHAPInput(id, in_cfg, comps, accs, svr);
+  }
+}
+
+void CreateHAPSensor(int id, const struct mgos_config_sensor *s_cfg,
+                     std::vector<std::unique_ptr<Component>> *comps,
+                     std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
+                     HAPAccessoryServerRef *svr, bool to_pri_acc) {
+  std::unique_ptr<hap::Sensor> sensor;
+  struct mgos_config_sensor *cfg = (struct mgos_config_sensor *) s_cfg;
+  uint64_t aid = 0;
+  HAPAccessoryCategory cat = kHAPAccessoryCategory_BridgedAccessory;
+  bool sensor_hidden = false;
+  
+  cat = kHAPAccessoryCategory_Sensors;
+  aid = SHELLY_HAP_AID_BASE_SENSOR + id;
+  sensor.reset(new hap::Sensor(id, cfg));
+     
+  auto st = sensor->Init();
+  if (!st.ok()) {
+    const std::string &s = st.ToString();
+    LOG(LL_ERROR, ("Error creating sensor: %s", s.c_str()));
+    return;
+  }
+  hap::Sensor *sensor2 = sensor.get();
+  comps->push_back(std::move(sensor));
+  mgos::hap::Accessory *pri_acc = accs->front().get();
+  if (to_pri_acc) {
+    // NB: this produces duplicate primary services on multi-switch devices in
+    // legacy mode. This is necessary to ensure accessory configuration remains
+    // exactly the same.
+    sensor2->set_primary(true);
+    pri_acc->SetCategory(cat);
+    pri_acc->AddService(sensor2);
+    // This was requested in
+    // https://github.com/mongoose-os-apps/shelly-homekit/issues/237 however,
+    // without https://github.com/mongoose-os-libs/dns-sd/issues/5 it causes
+    // confusion when multiple accessories advertise the same name (reported in
+    // https://github.com/mongoose-os-apps/shelly-homekit/issues/561).
+    // So for now we're going back to less readable but unique accessory names.
+    // pri_acc->SetName(sw2->name());
+    return;
+  }
+  if (!sensor_hidden) {
+    std::unique_ptr<mgos::hap::Accessory> acc(
+        new mgos::hap::Accessory(aid, kHAPAccessoryCategory_BridgedAccessory,
+                                 s_cfg->name, &AccessoryIdentifyCB, svr));
+    acc->AddHAPService(&mgos_hap_accessory_information_service);
+    acc->AddService(sensor2);
+    accs->push_back(std::move(acc));
   }
 }
 

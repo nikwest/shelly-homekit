@@ -141,14 +141,6 @@ Status ShellyInput::Init() {
       s_ = db;
       break;
     }
-    case Type::kTemperatureSensor: {
-      auto *db = new hap::TemperatureSensor(id(), in_,
-                          (struct mgos_config_in_sensor *) &cfg_->sensor);
-      c_.reset(db);
-      s_ = db;
-      break;
-    }
-
     default: {
       return mgos::Errorf(STATUS_INVALID_ARGUMENT, "Invalid type %d",
                           (int) initial_type_);
@@ -232,7 +224,6 @@ bool ShellyInput::IsValidType(int type) {
     case (int) Type::kOccupancySensor:
     case (int) Type::kContactSensor:
     case (int) Type::kDoorbell:
-    case (int) Type::kTemperatureSensor:
       return true;
   }
   return false;

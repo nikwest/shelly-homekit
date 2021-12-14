@@ -100,6 +100,10 @@ config_schema:
 
   - ["_const.rpc_acl", "s", '[{"ch_type": "UART", "acl": "*"},{"method": "Shelly.GetInfo", "acl": "*"},{"method": "*", "ch_type": "HTTP", "acl": "admin"},{"method": "*", "ch_type": "WS_in", "acl": "admin"}]', {}]
 
+  - ["sensor", "o", {title: "Sensor settings", abstract: true}]
+  - ["sensor.name", "s", "Sensor", {title: "Accessory name"}]
+  - ["sensor.enable", "b", true, {title: "Enable this sensor in the accessory"}]
+
   # Preserved from stock.
   - ["k_apparent", "i", 1750000, {}]
   - ["max_power", "i", 1800, {}]
@@ -644,9 +648,9 @@ conds:
         - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
- #       - location: https://github.com/mongoose-os-libs/sht31-i2c     
- #       - location: https://github.com/mongoose-os-libs/bme280
-        - location: https://github.com/mongoose-os-libs/htu21df-i2c
+        - location: https://github.com/mongoose-os-libs/sht31-i2c     
+        - location: https://github.com/mongoose-os-libs/bme280
+ #       - location: https://github.com/mongoose-os-libs/htu21df-i2c
  #       - location: https://github.com/mongoose-os-libs/si7021-i2c
         - location: https://github.com/mongoose-os-libs/i2c
  #     build_vars:
@@ -659,8 +663,8 @@ conds:
         STOCK_FW_MODEL: '"SHSW-21"'
         MG_ENABLE_SSL: 0
 #        HAVE_SHT3X : 1
-#       HAVE_BME280 : 1
-        HAVE_HTU21DF : 1
+        HAVE_BME280 : 1
+#        HAVE_HTU21DF : 1
 #        HAVE_SI7021 : 1
       config_schema:
         - ["dash.enable", true]
@@ -694,6 +698,8 @@ conds:
         - ["in4.sensor.name", "Custom S4"]
         - ["gdo1", "gdo", {title: "GDO1 settings"}]
         - ["gdo1.name", "Garage Door"]
+        - ["ts1", "sensor", {title: "TS1 settings"}]
+        - ["ts1.name", "Temperature Sensor"]
         # Only for backward compatibility (config <= v3).
         - ["ssw1", "ssw", {title: "SSW1 settings"}]
         - ["ssw1.name", "Input 1"]
@@ -709,10 +715,12 @@ conds:
           variant: esp32
         - location: https://github.com/mongoose-os-libs/i2c
         - location: https://github.com/mongoose-os-libs/pcf857x-i2c  
-        - location: https://github.com/mongoose-os-libs/sht31-i2c     
         - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
+#        - location: https://github.com/mongoose-os-libs/htu21df-i2c
+#        - location: https://github.com/mongoose-os-libs/sht31-i2c
+        - location: https://github.com/mongoose-os-libs/bme280
       build_vars:
         MGOS_ROOT_FS_TYPE: SPIFFS
       cdefs:
@@ -720,12 +728,16 @@ conds:
         STOCK_FW_MODEL: '"XXX"'
         MG_ENABLE_SSL: 0
         PCF8574: 1
-        HAVE_SHT3X : 1
+#        HAVE_HTU21DF : 1
+#       HAVE_BME280 : 1
       config_schema:
+        - ["dash.enable", true]
+        - ["dash.token", "Rf0rTOGoK8YE91d90xnc6LgQ"]
         - ["i2c.debug", false]
         - ["i2c.enable", true]
         - ["i2c.sda_gpio", 18]
         - ["i2c.scl_gpio", 19]
+        - ["i2c1.enable", true]
         - ["i2c1.sda_gpio", 2]
         - ["i2c1.scl_gpio", 4]
         - ["device.id", "custom16-??????"]
