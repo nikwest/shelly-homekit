@@ -21,7 +21,7 @@
 #include "shelly_input_pin.hpp"
 //#include "shelly_sensor_sht3x.hpp"
 //#include "shelly_sensor_htu21df.hpp"
-#include "shelly_sensor_bme280.hpp"
+#include "shelly_sensor_bmx280.hpp"
 #include "shelly_main.hpp"
 #include "custom16_pcf857x_output.hpp"
 #include "custom16_pcf857x_input.hpp"
@@ -38,7 +38,7 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
                        std::unique_ptr<TempSensor> *sys_temp) {
 
 //  sys_temp->reset(new HTU21DFSensor(0, 0x40));
-#ifdef HAVE_BME280
+#ifdef HAVE_BMX280
   sys_temp->reset(new BME280Sensor(1, 0x76));
 #endif
 

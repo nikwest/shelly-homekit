@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_BME280
+#ifdef HAVE_BMX280
 
-#include "shelly_sensor_bme280.hpp"
+#include "shelly_sensor_bmx280.hpp"
 
 #include "mgos.h"
 #include "mgos_i2c.h"
@@ -27,7 +27,7 @@
 
 namespace shelly {
 
-BME280Sensor::BME280Sensor(int bus_num, uint8_t i2caddr) {
+BMP280Sensor::BMP280Sensor(int bus_num, uint8_t i2caddr) {
   if(bus_num != 0) {
     LOG(LL_ERROR, ("Creating sensor only suppored on i2c0 bus"));
     return;
@@ -40,10 +40,10 @@ BME280Sensor::BME280Sensor(int bus_num, uint8_t i2caddr) {
   } 
 }
 
-BME280Sensor::~BME280Sensor() {
+BMP280Sensor::~BMP280Sensor() {
 }
 
-StatusOr<float> BME280Sensor::GetTemperature() {
+StatusOr<float> BMP280Sensor::GetTemperature() {
   if (!bme280_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
   }
@@ -57,6 +57,26 @@ StatusOr<float> BME280Sensor::GetTemperature() {
   return (float) t;
 }
 
+StatusOr<float> BMP280Sensor::GetPressure() {
+  if (!bme280_) {
+    LOG(LL_ERROR, ("Could not initialize sensor"));
+  }
+  double p = mgos_bme280_read_pressure(bme280_);
+ 
+  if (p == NAN) {
+    return Status(-1, "Cannot read bme280 sensor") ;
+  } 
+  LOG(LL_DEBUG, ("bme280 readings: p %.3f", p));
+
+  return (float) p;
+}
+
+BME280Sensor::BME280Sensor(int bus_num, uint8_t i2caddr) : BMP280Sensor(bus_num, i2caddr) {
+}
+
+BME280Sensor::~BME280Sensor() {
+} 
+
 StatusOr<float> BME280Sensor::GetHumidity() {
   if (!bme280_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
@@ -69,20 +89,6 @@ StatusOr<float> BME280Sensor::GetHumidity() {
   LOG(LL_DEBUG, ("bme280 readings: h %.3f", h));
 
   return (float) h;
-}
-
-StatusOr<float> BME280Sensor::GetPressure() {
-  if (!bme280_) {
-    LOG(LL_ERROR, ("Could not initialize sensor"));
-  }
-  double p = mgos_bme280_read_pressure(bme280_);
- 
-  if (p == NAN) {
-    return Status(-1, "Cannot read bme280 sensor") ;
-  } 
-  LOG(LL_DEBUG, ("bme280 readings: p %.3f", p));
-
-  return (float) p;
 }
 
 }  // namespace shelly

@@ -641,10 +641,12 @@ conds:
 
   - when: build_vars.MODEL == "Custom2"
     apply:
+      platform: esp32
       name: switch
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
-          variant: esp8266-nossl
+          variant: esp32
+#          variant: esp8266-nossl
         - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
@@ -663,7 +665,7 @@ conds:
         STOCK_FW_MODEL: '"SHSW-21"'
         MG_ENABLE_SSL: 0
 #        HAVE_SHT3X : 1
-        HAVE_BME280 : 1
+        HAVE_BMX280 : 1
 #        HAVE_HTU21DF : 1
 #        HAVE_SI7021 : 1
       config_schema:
@@ -729,7 +731,7 @@ conds:
         MG_ENABLE_SSL: 0
         PCF8574: 1
 #        HAVE_HTU21DF : 1
-#       HAVE_BME280 : 1
+#       HAVE_BMX280 : 1
       config_schema:
         - ["dash.enable", true]
         - ["dash.token", "Rf0rTOGoK8YE91d90xnc6LgQ"]

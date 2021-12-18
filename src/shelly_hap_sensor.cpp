@@ -29,7 +29,7 @@ Status Sensor::Init() {
   AddNameChar(iid++, cfg_->name);
   
   AddChar(new mgos::hap::FloatCharacteristic(
-    svc_.iid + 2, &kHAPCharacteristicType_CurrentTemperature, 0.0, 100.0, 0.1,
+    svc_.iid + 2, &kHAPCharacteristicType_CurrentTemperature, 0.0F, 100.0F, 0.1F,
     std::bind(&Sensor::FloatStateCharRead, this, _1, _2, _3),
     true /* supports_notification */, nullptr /* write_handler */,
     kHAPCharacteristicDebugDescription_CurrentTemperature));
@@ -41,7 +41,8 @@ HAPError Sensor::FloatStateCharRead(HAPAccessoryServerRef *,
                              const HAPFloatCharacteristicReadRequest *,
                              float *value) {
   LOG(LL_ERROR, ("Reading temp: %f", temp_));
-  //*value = temp_;
+  *value = temp_;
+  HAPLogInfo(&kHAPLog_Default, "%s: %f", __func__, *value);
   return kHAPError_None;
 }
 
