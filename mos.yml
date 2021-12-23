@@ -101,7 +101,10 @@ config_schema:
   - ["_const.rpc_acl", "s", '[{"ch_type": "UART", "acl": "*"},{"method": "Shelly.GetInfo", "acl": "*"},{"method": "*", "ch_type": "HTTP", "acl": "admin"},{"method": "*", "ch_type": "WS_in", "acl": "admin"}]', {}]
 
   - ["sensor", "o", {title: "Sensor settings", abstract: true}]
-  - ["sensor.name", "s", "Sensor", {title: "Accessory name"}]
+  - ["sensor.name", "s", "Sensor", {title: "Sensor name"}]
+  - ["sensor.model", "i", 0, {title: "Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021"}]
+  - ["sensor.i2c_bus", "i", 0, {title: "i2c bus number"}]
+  - ["sensor.i2c_addr", "i", 0, {title: "i2c address number"}]
   - ["sensor.enable", "b", true, {title: "Enable this sensor in the accessory"}]
 
   # Preserved from stock.
@@ -641,31 +644,31 @@ conds:
 
   - when: build_vars.MODEL == "Custom2"
     apply:
-      platform: esp32
+#      platform: esp32
       name: switch
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
-          variant: esp32
-#          variant: esp8266-nossl
-        - location: https://github.com/mongoose-os-libs/dash # optional
-        - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
-        - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
+#          variant: esp32
+          variant: esp8266-nossl
+ #       - location: https://github.com/mongoose-os-libs/dash # optional
+ #       - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
+ #       - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
         - location: https://github.com/mongoose-os-libs/sht31-i2c     
-        - location: https://github.com/mongoose-os-libs/bme280
+ #       - location: https://github.com/mongoose-os-libs/bme280
  #       - location: https://github.com/mongoose-os-libs/htu21df-i2c
  #       - location: https://github.com/mongoose-os-libs/si7021-i2c
         - location: https://github.com/mongoose-os-libs/i2c
- #     build_vars:
- #       FLASH_SIZE: 2097152
- #       FS_SIZE: 262144
- #       BOOT_CONFIG_ADDR: 0x1000
- #       MGOS_ROOT_FS_TYPE: SPIFFS
+      # build_vars:
+      #   FLASH_SIZE: 2097152  #esp 8266:  4194304
+      #   FS_SIZE: 262144
+      #   BOOT_CONFIG_ADDR: 0x1000
+      #   MGOS_ROOT_FS_TYPE: SPIFFS
       cdefs:
         PRODUCT_HW_REV: '"1.0"'
         STOCK_FW_MODEL: '"SHSW-21"'
         MG_ENABLE_SSL: 0
-#        HAVE_SHT3X : 1
-        HAVE_BMX280 : 1
+        HAVE_SHT3X : 1
+#       HAVE_BMX280 : 1
 #        HAVE_HTU21DF : 1
 #        HAVE_SI7021 : 1
       config_schema:
@@ -688,20 +691,24 @@ conds:
         - ["in2", "in", {title: "Input 2 settings"}]
         - ["in2.ssw.name", "Shelly SSW2"]
         - ["in2.sensor.name", "Shelly S2"]
-        - ["sw3", "sw", {title: "SW3 settings"}]
-        - ["sw3.name", "Custom SW3"]
-        - ["in3", "in", {title: "Input 3 settings"}]
-        - ["in3.ssw.name", "Custom SSW3"]
-        - ["in3.sensor.name", "Custom S3"]
-        - ["sw4", "sw", {title: "SW4 settings"}]
-        - ["sw4.name", "Custom SW4"]
-        - ["in4", "in", {title: "Input 4 settings"}]
-        - ["in4.ssw.name", "Custom SSW4"]
-        - ["in4.sensor.name", "Custom S4"]
+        # - ["sw3", "sw", {title: "SW3 settings"}]
+        # - ["sw3.name", "Custom SW3"]
+        # - ["in3", "in", {title: "Input 3 settings"}]
+        # - ["in3.ssw.name", "Custom SSW3"]
+        # - ["in3.sensor.name", "Custom S3"]
+        # - ["sw4", "sw", {title: "SW4 settings"}]
+        # - ["sw4.name", "Custom SW4"]
+        # - ["in4", "in", {title: "Input 4 settings"}]
+        # - ["in4.ssw.name", "Custom SSW4"]
+        # - ["in4.sensor.name", "Custom S4"]
         - ["gdo1", "gdo", {title: "GDO1 settings"}]
         - ["gdo1.name", "Garage Door"]
-        - ["ts1", "sensor", {title: "TS1 settings"}]
-        - ["ts1.name", "Temperature Sensor"]
+        - ["sensor1", "sensor", {title: "Sensor 1 settings"}]
+        - ["sensor1.name", "Sensor 1"]
+        - ["sensor1.model", 3]
+        - ["sensor1.i2c_addr", 0x45] # sht3x
+#        - ["sensor1.model", 0]
+#        - ["sensor1.i2c_addr", 0x76] # bmp280
         # Only for backward compatibility (config <= v3).
         - ["ssw1", "ssw", {title: "SSW1 settings"}]
         - ["ssw1.name", "Input 1"]

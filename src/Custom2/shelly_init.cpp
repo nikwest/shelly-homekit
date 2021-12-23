@@ -33,16 +33,16 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
                        std::vector<std::unique_ptr<PowerMeter>> *pms,
                        std::unique_ptr<TempSensor> *sys_temp) {
   outputs->emplace_back(new OutputPin(1, 15, 1));
-  outputs->emplace_back(new OutputPin(2, 13, 1));
+//  outputs->emplace_back(new OutputPin(2, 13, 1));
   // outputs->emplace_back(new OutputPin(3, 2, 1));
   // outputs->emplace_back(new OutputPin(4, 0, 1));
   auto *in1 = new InputPin(1, 12, 1, MGOS_GPIO_PULL_UP, true);
   in1->AddHandler(std::bind(&HandleInputResetSequence, in1, 4, _1, _2));
   in1->Init();
   inputs->emplace_back(in1);
-  auto *in2 = new InputPin(2, 14, 1, MGOS_GPIO_PULL_UP, false);
-  in2->Init();
-  inputs->emplace_back(in2);
+  // auto *in2 = new InputPin(2, 14, 1, MGOS_GPIO_PULL_UP, false);
+  // in2->Init();
+  // inputs->emplace_back(in2);
   // auto *in3 = new InputPin(3, 1, 1, MGOS_GPIO_PULL_UP, false);
   // in3->Init();
   // inputs->emplace_back(in3);
@@ -65,53 +65,18 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
 void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
                       std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
                       HAPAccessoryServerRef *svr) {
-  // Garage door opener mode.
-  if (mgos_sys_config_get_shelly_mode() == 2) {
-    auto *gdo_cfg = (struct mgos_config_gdo *) mgos_sys_config_get_gdo1();
-    std::unique_ptr<hap::GarageDoorOpener> gdo(new hap::GarageDoorOpener(
-        1, FindInput(1), FindInput(2), FindOutput(1), FindOutput(2), gdo_cfg));
-    if (gdo == nullptr || !gdo->Init().ok()) {
-      return;
-    }
-    gdo->set_primary(true);
-    mgos::hap::Accessory *pri_acc = (*accs)[0].get();
-    pri_acc->SetCategory(kHAPAccessoryCategory_GarageDoorOpeners);
-    pri_acc->AddService(gdo.get());
-    comps->emplace_back(std::move(gdo));
-    return;
-  }
-  // Use legacy layout if upgraded from an older version (pre-2.1).
-  // However, presence of detached inputs overrides it.
-  bool compat_20 = (mgos_sys_config_get_shelly_legacy_hap_layout() &&
-                    mgos_sys_config_get_sw1_in_mode() != 3 &&
-                    mgos_sys_config_get_sw2_in_mode() != 3);
-  if (!compat_20) {
-    CreateHAPSwitch(1, mgos_sys_config_get_sw1(), mgos_sys_config_get_in1(),
-                    comps, accs, svr, false /* to_pri_acc */);
-    CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
-                    comps, accs, svr, false /* to_pri_acc */);
-    CreateHAPSensor(3, mgos_sys_config_get_ts1(),
-                  comps, accs, svr, true /* to_pri_acc */);
-    // CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
-    //                 comps, accs, svr, false /* to_pri_acc */);
-    // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
-    //                 comps, accs, svr, false /* to_pri_acc */);
-  } else {
-    // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
-    //                 comps, accs, svr, true /* to_pri_acc */);
-    // CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
-    //                 comps, accs, svr, true /* to_pri_acc */);
-    CreateHAPSensor(3, mgos_sys_config_get_ts1(),
-                  comps, accs, svr, true /* to_pri_acc */);
-    CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
-                    comps, accs, svr, true /* to_pri_acc */);
-    CreateHAPSwitch(1, mgos_sys_config_get_sw1(), mgos_sys_config_get_in1(),
-                    comps, accs, svr, true /* to_pri_acc */);
-    std::reverse(comps->begin(), comps->end());
+  
+  // CreateHAPSwitch(1, mgos_sys_config_get_sw1(), mgos_sys_config_get_in1(),
+  //                 comps, accs, svr, false /* to_pri_acc */);
+  // // CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
+  //                 comps, accs, svr, false /* to_pri_acc */);
+  CreateHAPSensor(1, mgos_sys_config_get_sensor1(),
+                comps, accs, svr, true /* to_pri_acc */);
+  // CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
+  //                 comps, accs, svr, false /* to_pri_acc */);
+  // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
+  //                 comps, accs, svr, false /* to_pri_acc */);
 
-  }
-
- 
 }
 
 }  // namespace shelly

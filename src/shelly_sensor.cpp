@@ -6,6 +6,8 @@
 #include "mgos_hap_chars.hpp"
 
 #include "shelly_main.hpp"
+#include "shelly_sensor_bmx280.hpp"
+#include "shelly_sensor_sht3x.hpp"
 
 namespace shelly {
 
@@ -15,6 +17,9 @@ ShellySensor::ShellySensor(int id, struct mgos_config_sensor *cfg)
 }
 
 ShellySensor::~ShellySensor() {
+  temp_.release();
+  humidity_.release();
+  pressure_.release();
 }
 
 Component::Type ShellySensor::type() const {
@@ -76,6 +81,35 @@ Status ShellySensor::Init() {
   if (!cfg_->enable) {
     LOG(LL_INFO, ("'%s' is disabled", cfg_->name));
     return Status::OK();
+  }
+  switch (cfg_->model) {
+  case kBMP280:
+    #ifdef HAVE_BMX280
+    {
+      auto* sensor(new BMP280Sensor(cfg_->i2c_bus,  cfg_->i2c_addr));
+      temp_.reset(sensor);
+      humidity_.reset(nullptr);
+      pressure_.reset(sensor);
+    }
+    #else 
+    //  #warning "HAVE_BMX280 not enabled"
+    #endif
+    break;
+  case kSHT3X:
+    #ifdef HAVE_SHT3X
+    {
+      auto* sensor(new SHT3xSensor(cfg_->i2c_bus,  cfg_->i2c_addr));
+      temp_.reset(sensor);
+      humidity_.reset(sensor);
+      pressure_.reset(nullptr);
+    }
+    #else 
+    //  #warning "HAVE_SHT3X not enabled"
+    #endif
+    break;
+  default:
+    LOG(LL_INFO, ("Unsupported sensor model '%i'", cfg_->model));
+    break;
   }
   
   LOG(LL_INFO, ("Exporting '%s': ", cfg_->name));

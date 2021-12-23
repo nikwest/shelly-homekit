@@ -8,6 +8,8 @@
 #include "mgos_hap.hpp"
 #include "mgos_sys_config.h"
 #include "mgos_timers.h"
+#include "mgos_hap_accessory.hpp"
+#include "mgos_hap_service.hpp"
 
 #include "shelly_common.hpp"
 #include "shelly_component.hpp"
@@ -21,14 +23,13 @@ class Sensor : public ShellySensor {
   Sensor(int id, struct mgos_config_sensor *cfg);
   virtual ~Sensor();
 
-  Status Init();
+  Status Init(std::unique_ptr<mgos::hap::Accessory> *acc);
+
+ // Status AddToAcc(mgos::hap::Accessory *acc);
 
  protected:
-  HAPError FloatStateCharRead(HAPAccessoryServerRef *,
-                             const HAPFloatCharacteristicReadRequest *,
-                             float *value);
+ //  std::vector<std::unique_ptr<mgos::hap::Service>> services_;
 
-  float temp_ = 0.0;
 };
 
 }  // namespace hap

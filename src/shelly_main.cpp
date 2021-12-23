@@ -276,47 +276,24 @@ void CreateHAPSensor(int id, const struct mgos_config_sensor *s_cfg,
                      HAPAccessoryServerRef *svr, bool to_pri_acc) {
   std::unique_ptr<hap::Sensor> sensor;
   struct mgos_config_sensor *cfg = (struct mgos_config_sensor *) s_cfg;
-  uint64_t aid = 0;
-  HAPAccessoryCategory cat = kHAPAccessoryCategory_BridgedAccessory;
-  bool sensor_hidden = false;
+  uint64_t aid = SHELLY_HAP_AID_BASE_SENSOR;
   
-  cat = kHAPAccessoryCategory_Sensors;
+  std::unique_ptr<mgos::hap::Accessory> acc(
+    new mgos::hap::Accessory(aid, kHAPAccessoryCategory_BridgedAccessory,
+                                 s_cfg->name, &AccessoryIdentifyCB, svr));
+  acc->AddHAPService(&mgos_hap_accessory_information_service);
+
   aid = SHELLY_HAP_AID_BASE_SENSOR + id;
   sensor.reset(new hap::Sensor(id, cfg));
      
-  auto st = sensor->Init();
+  auto st = sensor->Init(&acc);
   if (!st.ok()) {
     const std::string &s = st.ToString();
     LOG(LL_ERROR, ("Error creating sensor: %s", s.c_str()));
     return;
   }
-  hap::Sensor *sensor2 = sensor.get();
   comps->push_back(std::move(sensor));
-  mgos::hap::Accessory *pri_acc = accs->front().get();
-  if (to_pri_acc) {
-    // NB: this produces duplicate primary services on multi-switch devices in
-    // legacy mode. This is necessary to ensure accessory configuration remains
-    // exactly the same.
-    sensor2->set_primary(true);
-    pri_acc->SetCategory(cat);
-    pri_acc->AddService(sensor2);
-    // This was requested in
-    // https://github.com/mongoose-os-apps/shelly-homekit/issues/237 however,
-    // without https://github.com/mongoose-os-libs/dns-sd/issues/5 it causes
-    // confusion when multiple accessories advertise the same name (reported in
-    // https://github.com/mongoose-os-apps/shelly-homekit/issues/561).
-    // So for now we're going back to less readable but unique accessory names.
-    // pri_acc->SetName(sw2->name());
-    return;
-  }
-  if (!sensor_hidden) {
-    std::unique_ptr<mgos::hap::Accessory> acc(
-        new mgos::hap::Accessory(aid, kHAPAccessoryCategory_BridgedAccessory,
-                                 s_cfg->name, &AccessoryIdentifyCB, svr));
-    acc->AddHAPService(&mgos_hap_accessory_information_service);
-    acc->AddService(sensor2);
-    accs->push_back(std::move(acc));
-  }
+  accs->push_back(std::move(acc));
 }
 
 static void DisableLegacyHAPLayout() {

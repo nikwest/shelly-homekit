@@ -2,6 +2,7 @@
 
 #ifdef HAVE_BMX280
 
+#include "shelly_sensor.hpp"
 #include "shelly_temp_sensor.hpp"
 #include "shelly_humidity_sensor.hpp"
 #include "shelly_pressure_sensor.hpp"

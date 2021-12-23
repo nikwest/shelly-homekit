@@ -46,6 +46,7 @@ BMP280Sensor::~BMP280Sensor() {
 StatusOr<float> BMP280Sensor::GetTemperature() {
   if (!bme280_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
+    return Status(-1, "bme280 sensor not initialized") ;
   }
   double t = mgos_bme280_read_temperature(bme280_);
  
