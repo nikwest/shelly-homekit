@@ -51,7 +51,7 @@ void CreateHAPSwitch(int id, const struct mgos_config_sw *sw_cfg,
                      HAPAccessoryServerRef *svr, bool to_pri_acc,
                      Output *led_out = nullptr);
 
-void CreateHAPSensor(int id, const struct mgos_config_sensor *s_cfg,
+void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
                      std::vector<std::unique_ptr<Component>> *comps,
                      std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
                      HAPAccessoryServerRef *svr, bool to_pri_acc);

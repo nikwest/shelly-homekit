@@ -11,7 +11,7 @@
 
 namespace shelly {
 
-ShellySensor::ShellySensor(int id, struct mgos_config_sensor *cfg)
+ShellySensor::ShellySensor(int id, struct mgos_config_se *cfg)
     : Component(id),
       cfg_(cfg) {
 }
@@ -37,16 +37,37 @@ StatusOr<std::string> ShellySensor::GetInfo() const {
 
 StatusOr<std::string> ShellySensor::GetInfoJSON() const {
   std::string res = mgos::JSONPrintStringf(
-      "{id: %d, type: %d, name: %Q",
-      id(), type(), (cfg_->name ? cfg_->name : ""));
-  
+      "{id: %d, type: %d, model: %d, name: %Q",
+      id(), type(), cfg_->model, (cfg_->name ? cfg_->name : ""));
+  if(temp_) {
+    auto temperature = temp_->GetTemperature();
+    if (temperature.ok()) {
+      std::string t = mgos::JSONPrintStringf(", tvalue: %.1f, tunit: %d", temperature.ValueOrDie(), cfg_->tunit);
+      res.append(t);
+    }
+  }
+  if(humidity_) {
+    auto humidity = humidity_->GetHumidity();
+    if (humidity.ok()) {
+      std::string t = mgos::JSONPrintStringf(", hvalue: %.0f", humidity.ValueOrDie());
+      res.append(t);
+    }
+  }
+  if(pressure_) {
+    auto pressure = pressure_->GetPressure();
+    if (pressure.ok()) {
+      std::string t = mgos::JSONPrintStringf(", pvalue: %.0f", pressure.ValueOrDie());
+      res.append(t);
+    }
+  }
+
   res.append("}");
   return res;
 }
 
 Status ShellySensor::SetConfig(const std::string &config_json,
                                bool *restart_required) {
-  struct mgos_config_sensor cfg = *cfg_;
+  struct mgos_config_se cfg = *cfg_;
   cfg.name = nullptr;
   json_scanf(
       config_json.c_str(), config_json.size(),
@@ -58,13 +79,18 @@ Status ShellySensor::SetConfig(const std::string &config_json,
     return mgos::Errorf(STATUS_INVALID_ARGUMENT, "invalid %s",
                         "name (too long, max 64)");
   }
+  if (cfg.tunit < 0 || cfg.tunit > 1) {
+     return mgos::Errorf(STATUS_INVALID_ARGUMENT, "invalid unit");
+  }
   
   // Now copy over.
   if (cfg_->name != nullptr && strcmp(cfg_->name, cfg.name) != 0) {
     mgos_conf_set_str(&cfg_->name, cfg.name);
     *restart_required = true;
   }
-  
+  if (cfg_->tunit != cfg.tunit) {
+    cfg_->tunit = cfg.tunit;
+  }
   return Status::OK();
 }
 

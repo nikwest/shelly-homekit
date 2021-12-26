@@ -20,7 +20,7 @@ namespace hap {
 
 class Sensor : public ShellySensor {
  public:
-  Sensor(int id, struct mgos_config_sensor *cfg);
+  Sensor(int id, struct mgos_config_se *cfg);
   virtual ~Sensor();
 
   Status Init(std::unique_ptr<mgos::hap::Accessory> *acc);

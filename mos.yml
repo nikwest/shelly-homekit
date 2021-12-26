@@ -100,12 +100,13 @@ config_schema:
 
   - ["_const.rpc_acl", "s", '[{"ch_type": "UART", "acl": "*"},{"method": "Shelly.GetInfo", "acl": "*"},{"method": "*", "ch_type": "HTTP", "acl": "admin"},{"method": "*", "ch_type": "WS_in", "acl": "admin"}]', {}]
 
-  - ["sensor", "o", {title: "Sensor settings", abstract: true}]
-  - ["sensor.name", "s", "Sensor", {title: "Sensor name"}]
-  - ["sensor.model", "i", 0, {title: "Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021"}]
-  - ["sensor.i2c_bus", "i", 0, {title: "i2c bus number"}]
-  - ["sensor.i2c_addr", "i", 0, {title: "i2c address number"}]
-  - ["sensor.enable", "b", true, {title: "Enable this sensor in the accessory"}]
+  - ["se", "o", {title: "Sensor settings", abstract: true}]
+  - ["se.name", "s", "Sensor", {title: "Sensor name"}]
+  - ["se.tunit", "i", 0, {title: "Sensor unit 0 - Celcius, 1 - Fahrenheit"}]
+  - ["se.model", "i", 0, {title: "Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021"}]
+  - ["se.i2c_bus", "i", 0, {title: "i2c bus number"}]
+  - ["se.i2c_addr", "i", 0, {title: "i2c address number"}]
+  - ["se.enable", "b", true, {title: "Enable this sensor in the accessory"}]
 
   # Preserved from stock.
   - ["k_apparent", "i", 1750000, {}]
@@ -664,8 +665,9 @@ conds:
       #   BOOT_CONFIG_ADDR: 0x1000
       #   MGOS_ROOT_FS_TYPE: SPIFFS
       cdefs:
+        PRODUCT_VENDOR: '"NikWest"'
         PRODUCT_HW_REV: '"1.0"'
-        STOCK_FW_MODEL: '"SHSW-21"'
+        STOCK_FW_MODEL: '"XXX"'
         MG_ENABLE_SSL: 0
         HAVE_SHT3X : 1
 #       HAVE_BMX280 : 1
@@ -703,12 +705,12 @@ conds:
         # - ["in4.sensor.name", "Custom S4"]
         - ["gdo1", "gdo", {title: "GDO1 settings"}]
         - ["gdo1.name", "Garage Door"]
-        - ["sensor1", "sensor", {title: "Sensor 1 settings"}]
-        - ["sensor1.name", "Sensor 1"]
-        - ["sensor1.model", 3]
-        - ["sensor1.i2c_addr", 0x45] # sht3x
-#        - ["sensor1.model", 0]
-#        - ["sensor1.i2c_addr", 0x76] # bmp280
+        - ["se1", "se", {title: "Sensor 1 settings"}]
+        - ["se1.name", "Sensor 1"]
+        - ["se1.model", 3]
+        - ["se1.i2c_addr", 0x45] # sht3x
+#        - ["se1.model", 0]
+#        - ["se1.i2c_addr", 0x76] # bmp280
         # Only for backward compatibility (config <= v3).
         - ["ssw1", "ssw", {title: "SSW1 settings"}]
         - ["ssw1.name", "Input 1"]
@@ -733,6 +735,7 @@ conds:
       build_vars:
         MGOS_ROOT_FS_TYPE: SPIFFS
       cdefs:
+        PRODUCT_VENDOR: '"NikWest"'
         PRODUCT_HW_REV: '"1.0"'
         STOCK_FW_MODEL: '"XXX"'
         MG_ENABLE_SSL: 0

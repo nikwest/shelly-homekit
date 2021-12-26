@@ -270,12 +270,12 @@ void CreateHAPSwitch(int id, const struct mgos_config_sw *sw_cfg,
   }
 }
 
-void CreateHAPSensor(int id, const struct mgos_config_sensor *s_cfg,
+void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
                      std::vector<std::unique_ptr<Component>> *comps,
                      std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
                      HAPAccessoryServerRef *svr, bool to_pri_acc) {
   std::unique_ptr<hap::Sensor> sensor;
-  struct mgos_config_sensor *cfg = (struct mgos_config_sensor *) s_cfg;
+  struct mgos_config_se *cfg = (struct mgos_config_se *) s_cfg;
   uint64_t aid = SHELLY_HAP_AID_BASE_SENSOR;
   
   std::unique_ptr<mgos::hap::Accessory> acc(

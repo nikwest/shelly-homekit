@@ -70,7 +70,7 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
   //                 comps, accs, svr, false /* to_pri_acc */);
   // // CreateHAPSwitch(2, mgos_sys_config_get_sw2(), mgos_sys_config_get_in2(),
   //                 comps, accs, svr, false /* to_pri_acc */);
-  CreateHAPSensor(1, mgos_sys_config_get_sensor1(),
+  CreateHAPSensor(1, mgos_sys_config_get_se1(),
                 comps, accs, svr, true /* to_pri_acc */);
   // CreateHAPSwitch(3, mgos_sys_config_get_sw3(), mgos_sys_config_get_in3(),
   //                 comps, accs, svr, false /* to_pri_acc */);

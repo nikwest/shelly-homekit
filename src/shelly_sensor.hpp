@@ -22,7 +22,7 @@ class ShellySensor : public Component {
     kMax,
   } model;
 
-  ShellySensor(int id, struct mgos_config_sensor *cfg);
+  ShellySensor(int id, struct mgos_config_se *cfg);
   virtual ~ShellySensor();
 
   // Component interface impl.
@@ -37,7 +37,7 @@ class ShellySensor : public Component {
   bool IsIdle() override;
 
  protected:
-   struct mgos_config_sensor *cfg_;
+   struct mgos_config_se *cfg_;
    std::unique_ptr<TempSensor> temp_;
    std::unique_ptr<PressureSensor> pressure_;
    std::unique_ptr<HumiditySensor> humidity_; 

@@ -24,7 +24,7 @@ const HAPUUID kHAPCharacteristic_EveCurrentAtmosphericPressure = {
     0xFF, 0x48, 0x9E, 0x07, 0x0F, 0xF1, 0x63, 0xE8,
 };
 
-Sensor::Sensor(int id, struct mgos_config_sensor *cfg)
+Sensor::Sensor(int id, struct mgos_config_se *cfg)
     : ShellySensor(id, cfg) {
 }
 
@@ -51,7 +51,7 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
         auto temperature = temp_->GetTemperature();
         if (!temperature.ok()) return kHAPError_Busy;
         *value = temperature.ValueOrDie();
-        LOG(LL_ERROR, ("Reading temp: %f", *value));
+        LOG(LL_INFO, ("Reading temp: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
@@ -72,7 +72,7 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
         auto humidity = humidity_->GetHumidity();
         if (!humidity.ok()) return kHAPError_Busy;
         *value = humidity.ValueOrDie();
-        LOG(LL_ERROR, ("Reading humidity: %f", *value));
+        LOG(LL_INFO, ("Reading humidity: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
@@ -94,7 +94,7 @@ if(pressure_) {
         auto pressure = pressure_->GetPressure();
         if (!pressure.ok()) return kHAPError_Busy;
         *value = pressure.ValueOrDie();
-        LOG(LL_ERROR, ("Reading pressure: %f", *value));
+        LOG(LL_INFO, ("Reading pressure: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
@@ -105,14 +105,6 @@ if(pressure_) {
 
   return Status::OK();
 }
-
-// Status Sensor::AddToAcc(mgos::hap::Accessory *acc) {
-//   for (auto &s : services_) {
-//     LOG(LL_INFO, ("Adding service iid: %d", s->iid()));
-//     acc->AddService(s);
-//   }
-//   return Status::OK();
-// }
 
 }  // namespace hap
 }  // namespace shelly

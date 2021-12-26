@@ -579,6 +579,41 @@
   </div>
 </div>
 
+<div class="container" id="value_template" style="display: none">
+  <a class="helpbadge"
+     href="https://github.com/mongoose-os-apps/shelly-homekit/wiki/Sensor-Settings"
+     target="_blank">?</a>
+  <h1 id="head">Sensor</h1>
+  <div class="form">
+    <div>
+      <div class="form-control">
+        <label>Name:</label>
+        <input type="text" id="name">
+      </div>
+      <div class="form-control" id="temp-sensor">
+        <label>Temperature:</label>
+        <span id="tvalue"></span>
+        <span id="tunit"></span>
+      </div>
+      <div class="form-control" id="humidity-sensor">
+        <label>Humidity:</label>
+        <span id="hvalue"></span>
+        <span id="hunit">%</span>
+      </div>
+      <div class="form-control" id="pressure-sensor">
+        <label>Pressure:</label>
+        <span id="pvalue"></span>
+        <span id="punit">hPa</span>
+      </div>
+      <div class="button-container">
+        <button id="save_btn">
+          <label><span id="save_spinner"></span>Save</label>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="container" id="gdo_template" style="display: none">
   <a class="helpbadge" href="https://github.com/mongoose-os-apps/shelly-homekit/wiki/Garage-Door-Opener-Settings"
      target="_blank">?</a>
