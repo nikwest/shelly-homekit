@@ -7,7 +7,9 @@
 
 #include "shelly_main.hpp"
 #include "shelly_sensor_bmx280.hpp"
+#include "shelly_sensor_htu21df.hpp"
 #include "shelly_sensor_sht3x.hpp"
+#include "shelly_sensor_si7021.hpp"
 
 namespace shelly {
 
@@ -121,6 +123,18 @@ Status ShellySensor::Init() {
     //  #warning "HAVE_BMX280 not enabled"
     #endif
     break;
+  case kHTU21:
+    #ifdef HAVE_HTU21DF
+    {
+      auto* sensor(new HTU21DFSensor(cfg_->i2c_bus,  cfg_->i2c_addr));
+      temp_.reset(sensor);
+      humidity_.reset(sensor);
+      pressure_.reset(nullptr);
+    }
+    #else 
+    //  #warning "HAVE_HTU21DF not enabled"
+    #endif
+    break;  
   case kSHT3X:
     #ifdef HAVE_SHT3X
     {
@@ -133,6 +147,18 @@ Status ShellySensor::Init() {
     //  #warning "HAVE_SHT3X not enabled"
     #endif
     break;
+  case kSI7021:
+    #ifdef HAVE_SI7021
+    {
+      auto* sensor(new SI7021Sensor(cfg_->i2c_bus,  cfg_->i2c_addr));
+      temp_.reset(sensor);
+      humidity_.reset(sensor);
+      pressure_.reset(nullptr);
+    }
+    #else 
+    //  #warning "HAVE_SI7021 not enabled"
+    #endif
+    break;  
   default:
     LOG(LL_INFO, ("Unsupported sensor model '%i'", cfg_->model));
     break;
