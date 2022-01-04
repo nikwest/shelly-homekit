@@ -4,7 +4,7 @@
 # Personal Branch 
 
 The intention of this branch:
- * support my custom devices, mainly a ESP32 based 16 channel switch [![Hardware](https://oshwlab.com/nikwest/switch-esp32_copy)]
+ * support my custom devices, mainly a ESP32 based 16 channel switch (Hardware design available [here](https://oshwlab.com/nikwest/switch-esp32_copy)).
  * support for esp dev boards (both esp8266 / esp32) (see Custom2 example)
  * add features which are not officially supported, in particular 
     * Prometheus support
