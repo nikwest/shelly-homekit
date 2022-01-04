@@ -1,6 +1,5 @@
 #pragma once
 
-#ifdef HAVE_BMX280
 
 #include "shelly_sensor.hpp"
 #include "shelly_temp_sensor.hpp"
@@ -32,5 +31,3 @@ class BME280Sensor : public HumiditySensor, public BMP280Sensor {
 };
 
 }  // namespace shelly
-
-#endif

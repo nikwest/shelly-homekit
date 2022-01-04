@@ -21,10 +21,7 @@
 #include "shelly_hap_temperature_sensor.hpp"
 #include "shelly_input_pin.hpp"
 #include "shelly_main.hpp"
-#include "shelly_sensor_sht3x.hpp"
-#include "shelly_sensor_bmx280.hpp"
-#include "shelly_sensor_htu21df.hpp"
-//#include "shelly_sensor_si7021.hpp"
+
 
 namespace shelly {
 
@@ -50,15 +47,6 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
   // in4->Init();
   // inputs->emplace_back(in4);
 
-// #ifdef HAVE_HTU21
-//   sys_temp->reset(new HTU21DFSensor(0, 0x40));
-// #endif
-// #ifdef HAVE_BMX280
-//   sys_temp->reset(new BME280Sensor(0, 0x76));
-// #endif
-// #ifdef HAVE_SHT3X
-//   sys_temp->reset(new SHT3xSensor(0, 0x45));
-// #endif
   (void) pms;
 }
 

@@ -19,6 +19,7 @@ class ShellySensor : public Component {
     kHTU21 = 2,
     kSHT3X = 3,
     kSI7021 = 4,
+    kBME680 = 5,
     kMax,
   } model;
 

@@ -1,29 +1,24 @@
 #pragma once
 
-#ifdef HAVE_HTU21DF
 
+#include "shelly_sensor.hpp"
 #include "shelly_temp_sensor.hpp"
 #include "shelly_humidity_sensor.hpp"
 #include "shelly_pressure_sensor.hpp"
-#include "mgos_htu21df.h"
+#include "mgos_bme680.h"
 
 namespace shelly {
 
-class HTU21DFSensor : public TempSensor, public HumiditySensor {
+class BME680Sensor : public TempSensor, public PressureSensor, public HumiditySensor {
  public:
-  HTU21DFSensor(int bus_num, uint8_t i2caddr);
-  virtual ~HTU21DFSensor();
+  BME680Sensor();
+  virtual ~BME680Sensor();
 
   StatusOr<float> GetTemperature() override;
+  StatusOr<float> GetPressure() override;
   StatusOr<float> GetHumidity() override;
 
- protected:
-
- private:
-  struct mgos_htu21df *htu21df_;
-
+  struct mgos_bsec_output out_;
 };
 
 }  // namespace shelly
-
-#endif

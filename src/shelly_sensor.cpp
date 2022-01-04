@@ -6,10 +6,26 @@
 #include "mgos_hap_chars.hpp"
 
 #include "shelly_main.hpp"
+
+#ifdef HAVE_BMX280
 #include "shelly_sensor_bmx280.hpp"
+#endif
+
+#ifdef HAVE_HTU21DF
 #include "shelly_sensor_htu21df.hpp"
+#endif
+
+#ifdef HAVE_SHT3X
 #include "shelly_sensor_sht3x.hpp"
+#endif
+
+#ifdef HAVE_SI7021
 #include "shelly_sensor_si7021.hpp"
+#endif
+
+#ifdef HAVE_BME680
+#include "shelly_sensor_bme680.hpp"
+#endif
 
 namespace shelly {
 
@@ -157,6 +173,18 @@ Status ShellySensor::Init() {
     }
     #else 
     //  #warning "HAVE_SI7021 not enabled"
+    #endif
+    break;  
+  case kBME680:
+    #ifdef HAVE_BME680
+    {
+      auto* sensor(new BME680Sensor());
+      temp_.reset(sensor);
+      humidity_.reset(sensor);
+      pressure_.reset(sensor);
+    }
+    #else 
+    //  #warning "HAVE_BME680 not enabled"
     #endif
     break;  
   default:

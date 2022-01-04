@@ -15,19 +15,17 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_HTU21DF
-
-#include "shelly_sensor_htu21df.hpp"
+#include "shelly_sensor_sht3x.hpp"
 
 #include "mgos.h"
 #include "mgos_i2c.h"
-#include "mgos_htu21df.h"
+#include "mgos_sht31.h"
 
 #include <math.h>
 
 namespace shelly {
 
-HTU21DFSensor::HTU21DFSensor(int bus_num, uint8_t i2caddr) {
+SHT3xSensor::SHT3xSensor(int bus_num, uint8_t i2caddr) {
   struct mgos_i2c *i2c = mgos_i2c_get_bus(bus_num);
 
   if (!i2c) {
@@ -35,44 +33,41 @@ HTU21DFSensor::HTU21DFSensor(int bus_num, uint8_t i2caddr) {
     return;
   } 
 
-  htu21df_ = mgos_htu21df_create(i2c, i2caddr);
-
-  if (!htu21df_) {
-    LOG(LL_ERROR, ("no htu21df sensor created."));
+  sht31_ = mgos_sht31_create(i2c, i2caddr);
+  if (!sht31_) {
+    LOG(LL_ERROR, ("no sht31 sensor created."));
   } 
 }
 
-HTU21DFSensor::~HTU21DFSensor() {
+SHT3xSensor::~SHT3xSensor() {
 }
 
-StatusOr<float> HTU21DFSensor::GetTemperature() {
-  if (!htu21df_) {
+StatusOr<float> SHT3xSensor::GetTemperature() {
+  if (!sht31_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
   }
-  float t = mgos_htu21df_getTemperature(htu21df_);
+  float t = mgos_sht31_getTemperature(sht31_);
  
   if (t == NAN) {
-    return Status(-1, "Cannot read htu21df sensor") ;
+    return Status(-1, "Cannot read sht3x sensor") ;
   } 
-  LOG(LL_DEBUG, ("htu21df readings: t %.3f", t));
+  LOG(LL_DEBUG, ("SHT3x readings: t %.3f", t));
 
   return t;
 }
 
-StatusOr<float> HTU21DFSensor::GetHumidity() {
-  if (!htu21df_) {
+StatusOr<float> SHT3xSensor::GetHumidity() {
+  if (!sht31_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
   }
-  double h = mgos_htu21df_getHumidity(htu21df_);
+  float h = mgos_sht31_getHumidity(sht31_);
  
   if (h == NAN) {
-    return Status(-1, "Cannot read htu21df sensor") ;
+    return Status(-1, "Cannot read sht3x sensor") ;
   } 
-  LOG(LL_DEBUG, ("htu21df readings: h %.3f", h));
+  LOG(LL_DEBUG, ("SHT3x readings: h %.2f", h));
 
   return h;
 }
 
 }  // namespace shelly
-
-#endif

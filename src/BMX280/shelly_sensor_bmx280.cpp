@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_BMX280
 
 #include "shelly_sensor_bmx280.hpp"
 
@@ -93,5 +92,3 @@ StatusOr<float> BME280Sensor::GetHumidity() {
 }
 
 }  // namespace shelly
-
-#endif

@@ -1,18 +1,16 @@
 #pragma once
 
-#ifdef HAVE_SI7021
 
 #include "shelly_temp_sensor.hpp"
 #include "shelly_humidity_sensor.hpp"
-#include "shelly_pressure_sensor.hpp"
-#include "mgos_si7021.h"
+#include "mgos_sht31.h"
 
 namespace shelly {
 
-class SI7021Sensor : public TempSensor, public HumiditySensor {
+class SHT3xSensor : public TempSensor, public HumiditySensor {
  public:
-  SI7021Sensor(int bus_num, uint8_t i2caddr);
-  virtual ~SI7021Sensor();
+  SHT3xSensor(int bus_num, uint8_t i2caddr);
+  virtual ~SHT3xSensor();
 
   StatusOr<float> GetTemperature() override;
   StatusOr<float> GetHumidity() override;
@@ -20,10 +18,8 @@ class SI7021Sensor : public TempSensor, public HumiditySensor {
  protected:
 
  private:
-  struct mgos_si7021 *si7021_;
+  struct mgos_sht31 *sht31_;
 
 };
 
 }  // namespace shelly
-
-#endif

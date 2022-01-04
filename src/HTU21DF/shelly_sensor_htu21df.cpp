@@ -15,19 +15,17 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_SI7021
-
-#include "shelly_sensor_si7021.hpp"
+#include "shelly_sensor_htu21df.hpp"
 
 #include "mgos.h"
 #include "mgos_i2c.h"
-#include "mgos_si7021.h"
+#include "mgos_htu21df.h"
 
 #include <math.h>
 
 namespace shelly {
 
-SI7021Sensor::SI7021Sensor(int bus_num, uint8_t i2caddr) {
+HTU21DFSensor::HTU21DFSensor(int bus_num, uint8_t i2caddr) {
   struct mgos_i2c *i2c = mgos_i2c_get_bus(bus_num);
 
   if (!i2c) {
@@ -35,44 +33,42 @@ SI7021Sensor::SI7021Sensor(int bus_num, uint8_t i2caddr) {
     return;
   } 
 
-  si7021_ = mgos_si7021_create(i2c, i2caddr);
+  htu21df_ = mgos_htu21df_create(i2c, i2caddr);
 
-  if (!si7021_) {
-    LOG(LL_ERROR, ("no si7021 sensor created."));
+  if (!htu21df_) {
+    LOG(LL_ERROR, ("no htu21df sensor created."));
   } 
 }
 
-SI7021Sensor::~SI7021Sensor() {
+HTU21DFSensor::~HTU21DFSensor() {
 }
 
-StatusOr<float> SI7021Sensor::GetTemperature() {
-  if (!si7021_) {
+StatusOr<float> HTU21DFSensor::GetTemperature() {
+  if (!htu21df_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
   }
-  float t = mgos_si7021_getTemperature(si7021_);
+  float t = mgos_htu21df_getTemperature(htu21df_);
  
   if (t == NAN) {
-    return Status(-1, "Cannot read si7021 sensor") ;
+    return Status(-1, "Cannot read htu21df sensor") ;
   } 
-  LOG(LL_DEBUG, ("si7021 readings: t %.3f", t));
+  LOG(LL_DEBUG, ("htu21df readings: t %.3f", t));
 
   return t;
 }
 
-StatusOr<float> SI7021Sensor::GetHumidity() {
-  if (!si7021_) {
+StatusOr<float> HTU21DFSensor::GetHumidity() {
+  if (!htu21df_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
   }
-  double h = mgos_si7021_getHumidity(si7021_);
+  double h = mgos_htu21df_getHumidity(htu21df_);
  
   if (h == NAN) {
-    return Status(-1, "Cannot read si7021 sensor") ;
+    return Status(-1, "Cannot read htu21df sensor") ;
   } 
-  LOG(LL_DEBUG, ("si7021 readings: h %.3f", h));
+  LOG(LL_DEBUG, ("htu21df readings: h %.3f", h));
 
   return h;
 }
 
 }  // namespace shelly
-
-#endif

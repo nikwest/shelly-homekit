@@ -88,7 +88,7 @@ if(pressure_) {
     // Name
     s->AddNameChar(iid++, cfg_->name);
     s->AddChar(new mgos::hap::FloatCharacteristic(
-      iid++, &kHAPCharacteristic_EveCurrentAtmosphericPressure, 0.0F, 2000.0F, 0.1F,
+      iid++, &kHAPCharacteristic_EveCurrentAtmosphericPressure, 0.0F, 200000.0F, 0.1F,
       [this](HAPAccessoryServerRef *, const HAPFloatCharacteristicReadRequest *,
           float *value) {
         auto pressure = pressure_->GetPressure();

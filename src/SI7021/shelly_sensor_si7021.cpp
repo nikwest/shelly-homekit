@@ -15,19 +15,18 @@
  * limitations under the License.
  */
 
-#ifdef HAVE_SHT3X
 
-#include "shelly_sensor_sht3x.hpp"
+#include "shelly_sensor_si7021.hpp"
 
 #include "mgos.h"
 #include "mgos_i2c.h"
-#include "mgos_sht31.h"
+#include "mgos_si7021.h"
 
 #include <math.h>
 
 namespace shelly {
 
-SHT3xSensor::SHT3xSensor(int bus_num, uint8_t i2caddr) {
+SI7021Sensor::SI7021Sensor(int bus_num, uint8_t i2caddr) {
   struct mgos_i2c *i2c = mgos_i2c_get_bus(bus_num);
 
   if (!i2c) {
@@ -35,43 +34,42 @@ SHT3xSensor::SHT3xSensor(int bus_num, uint8_t i2caddr) {
     return;
   } 
 
-  sht31_ = mgos_sht31_create(i2c, i2caddr);
-  if (!sht31_) {
-    LOG(LL_ERROR, ("no sht31 sensor created."));
+  si7021_ = mgos_si7021_create(i2c, i2caddr);
+
+  if (!si7021_) {
+    LOG(LL_ERROR, ("no si7021 sensor created."));
   } 
 }
 
-SHT3xSensor::~SHT3xSensor() {
+SI7021Sensor::~SI7021Sensor() {
 }
 
-StatusOr<float> SHT3xSensor::GetTemperature() {
-  if (!sht31_) {
+StatusOr<float> SI7021Sensor::GetTemperature() {
+  if (!si7021_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
   }
-  float t = mgos_sht31_getTemperature(sht31_);
+  float t = mgos_si7021_getTemperature(si7021_);
  
   if (t == NAN) {
-    return Status(-1, "Cannot read sht3x sensor") ;
+    return Status(-1, "Cannot read si7021 sensor") ;
   } 
-  LOG(LL_DEBUG, ("SHT3x readings: t %.3f", t));
+  LOG(LL_DEBUG, ("si7021 readings: t %.3f", t));
 
   return t;
 }
 
-StatusOr<float> SHT3xSensor::GetHumidity() {
-  if (!sht31_) {
+StatusOr<float> SI7021Sensor::GetHumidity() {
+  if (!si7021_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));
   }
-  float h = mgos_sht31_getHumidity(sht31_);
+  double h = mgos_si7021_getHumidity(si7021_);
  
   if (h == NAN) {
-    return Status(-1, "Cannot read sht3x sensor") ;
+    return Status(-1, "Cannot read si7021 sensor") ;
   } 
-  LOG(LL_DEBUG, ("SHT3x readings: h %.2f", h));
+  LOG(LL_DEBUG, ("si7021 readings: h %.3f", h));
 
   return h;
 }
 
 }  // namespace shelly
-
-#endif
