@@ -107,7 +107,8 @@ config_schema:
   - ["se.i2c_bus", "i", 0, {title: "i2c bus number"}]
   - ["se.i2c_addr", "i", 0, {title: "i2c address number"}]
   - ["se.enable", "b", true, {title: "Enable this sensor in the accessory"}]
-
+  - ["co2.detected_level", "f", 1500.0, {title: "CO2 level which is reported abnormal"}]
+  
   # Preserved from stock.
   - ["k_apparent", "i", 1750000, {}]
   - ["max_power", "i", 1800, {}]
@@ -650,14 +651,16 @@ conds:
 
   - when: build_vars.MODEL == "Custom2"
     apply:
-#      platform: esp32
+      platform: esp32
       name: switch
       sources:
 #        - src/BMX280
 #        - src/HTU21DF
 #        - src/SHT3X
 #        - src/SI7021
-#        - src/BME680
+        - src/BME680
+      filesystem:
+        - fs_BME680
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: esp32
@@ -684,7 +687,7 @@ conds:
         BME280_64BIT_ENABLE : 1
 #        HAVE_SHT3X : 1
 #        HAVE_BMX280 : 1
-#        HAVE_BME680 : 1
+        HAVE_BME680 : 1
 #        HAVE_HTU21DF : 1
 #        HAVE_SI7021 : 1
       config_schema:

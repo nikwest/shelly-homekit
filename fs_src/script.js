@@ -674,10 +674,16 @@ function updateComponent(cd) {
       el(c, "temp-sensor").hidden = (cd.tvalue == undefined);
       el(c, "humidity-sensor").hidden = (cd.hvalue == undefined);
       el(c, "pressure-sensor").hidden = (cd.pvalue == undefined);
+      el(c, "co2-sensor").hidden = (cd.co2value == undefined);
+      el(c, "iaq-sensor").hidden = (cd.iaqvalue == undefined);
+      el(c, "voc-sensor").hidden = (cd.vocvalue == undefined);
       el(c, "tvalue").innerHTML = (cd.tvalue != undefined) ? cd.tvalue : 'n/a';;
       el(c, "tunit").innerHTML = (cd.tunit == 0) ? `&#176;C` : `&#176;F`;
       el(c, "hvalue").innerHTML = (cd.hvalue != undefined) ? cd.hvalue : 'n/a';;
       el(c, "pvalue").innerHTML = (cd.pvalue != undefined) ? cd.pvalue : 'n/a';
+      el(c, "co2value").innerHTML = (cd.co2value != undefined) ? cd.co2value : 'n/a';
+      el(c, "iaqvalue").innerHTML = (cd.iaqvalue != undefined) ? cd.iaqvalue : 'n/a';
+      el(c, "vocvalue").innerHTML = (cd.vocvalue != undefined) ? cd.vocvalue : 'n/a';
       break;
     }
     case 3: { // Stateless Programmable Switch (aka input in detached mode).

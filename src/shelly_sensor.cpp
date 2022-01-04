@@ -38,6 +38,7 @@ ShellySensor::~ShellySensor() {
   temp_.release();
   humidity_.release();
   pressure_.release();
+  co2_.release();
 }
 
 Component::Type ShellySensor::type() const {
@@ -75,6 +76,25 @@ StatusOr<std::string> ShellySensor::GetInfoJSON() const {
     auto pressure = pressure_->GetPressure();
     if (pressure.ok()) {
       std::string t = mgos::JSONPrintStringf(", pvalue: %.0f", pressure.ValueOrDie());
+      res.append(t);
+    }
+  }
+  if(co2_) {
+    auto co2 = co2_->GetCO2Level();
+    if (co2.ok()) {
+      std::string t = mgos::JSONPrintStringf(", co2value: %.0f", co2.ValueOrDie());
+      res.append(t);
+    }
+  }
+  if(air_) {
+    auto iaq = air_->GetIAQLevel();
+    if (iaq.ok()) {
+      std::string t = mgos::JSONPrintStringf(", iaqvalue: %.1f", iaq.ValueOrDie());
+      res.append(t);
+    }
+    auto voc = air_->GetVOCLevel();
+    if (voc.ok()) {
+      std::string t = mgos::JSONPrintStringf(", vocvalue: %.1f", voc.ValueOrDie());
       res.append(t);
     }
   }
@@ -134,6 +154,8 @@ Status ShellySensor::Init() {
       temp_.reset(sensor);
       humidity_.reset(nullptr);
       pressure_.reset(sensor);
+      co2_.reset(nullptr);
+      air_.reset(nullptr);
     }
     #else 
     //  #warning "HAVE_BMX280 not enabled"
@@ -146,7 +168,9 @@ Status ShellySensor::Init() {
       temp_.reset(sensor);
       humidity_.reset(sensor);
       pressure_.reset(nullptr);
-    }
+      co2_.reset(nullptr);
+      air_.reset(nullptr);
+   }
     #else 
     //  #warning "HAVE_HTU21DF not enabled"
     #endif
@@ -158,6 +182,8 @@ Status ShellySensor::Init() {
       temp_.reset(sensor);
       humidity_.reset(sensor);
       pressure_.reset(nullptr);
+      co2_.reset(nullptr);
+      air_.reset(nullptr);
     }
     #else 
     //  #warning "HAVE_SHT3X not enabled"
@@ -170,7 +196,9 @@ Status ShellySensor::Init() {
       temp_.reset(sensor);
       humidity_.reset(sensor);
       pressure_.reset(nullptr);
-    }
+      co2_.reset(nullptr);
+      air_.reset(nullptr);
+   }
     #else 
     //  #warning "HAVE_SI7021 not enabled"
     #endif
@@ -182,6 +210,8 @@ Status ShellySensor::Init() {
       temp_.reset(sensor);
       humidity_.reset(sensor);
       pressure_.reset(sensor);
+      co2_.reset(sensor);
+      air_.reset(sensor);
     }
     #else 
     //  #warning "HAVE_BME680 not enabled"

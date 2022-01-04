@@ -8,6 +8,8 @@
 #include "shelly_temp_sensor.hpp"
 #include "shelly_humidity_sensor.hpp"
 #include "shelly_pressure_sensor.hpp"
+#include "shelly_co2_sensor.hpp"
+#include "shelly_airquality_sensor.hpp"
 
 namespace shelly {
 
@@ -42,6 +44,8 @@ class ShellySensor : public Component {
    std::unique_ptr<TempSensor> temp_;
    std::unique_ptr<PressureSensor> pressure_;
    std::unique_ptr<HumiditySensor> humidity_; 
+   std::unique_ptr<CO2Sensor> co2_; 
+   std::unique_ptr<AirQualitySensor> air_; 
 };
 
 }  // namespace shelly

@@ -31,12 +31,12 @@ static void bme680_output_cb(int ev, void *ev_data, void *arg) {
   double ts = out->temp.time_stamp / 1000000000.0;
   float ps_hpa = out->ps.signal / 100.0f;
   if (out->iaq.time_stamp > 0) {
-    LOG(LL_INFO,
+    LOG(LL_DEBUG,
         ("%.2f IAQ %.2f (acc %d) T %.2f RH %.2f P %.2f hPa VOC %.2f CO2 %.2f", ts,
          out->iaq.signal, out->iaq.accuracy, out->temp.signal, out->rh.signal,
          ps_hpa, out->voc.signal, out->co2.signal));
   } else {
-    LOG(LL_INFO, ("%.2f T %.2f RH %.2f P %.2f hPa", ts,
+    LOG(LL_DEBUG, ("%.2f T %.2f RH %.2f P %.2f hPa", ts,
                   out->temp.signal, out->rh.signal, ps_hpa));
   }
   sensor->out_ = *out;
@@ -75,13 +75,43 @@ StatusOr<float> BME680Sensor::GetPressure() {
 }
 
 StatusOr<float> BME680Sensor::GetHumidity() {
- if (out_.rh.time_stamp == 0) {
+  if (out_.rh.time_stamp == 0) {
     return Status(-1, "Cannot read humidity from bme680 sensor") ;
   } 
   float rh = out_.rh.signal;
   LOG(LL_DEBUG, ("bme280 readings: rh %.3f", rh));
 
   return rh;
+}
+
+StatusOr<float> BME680Sensor::GetCO2Level() {
+  if (out_.co2.time_stamp == 0) {
+    return Status(-1, "Cannot read co2 level from bme680 sensor") ;
+  } 
+  float co2 = out_.co2.signal;
+  LOG(LL_DEBUG, ("bme280 readings: co2 %.0f", co2));
+
+  return co2;
+}
+
+StatusOr<float> BME680Sensor::GetIAQLevel() {
+  if (out_.iaq.time_stamp == 0) {
+    return Status(-1, "Cannot read iaq level from bme680 sensor") ;
+  } 
+  float iaq = out_.iaq.signal;
+  LOG(LL_DEBUG, ("bme280 readings: iaq %.0f", iaq));
+
+  return iaq;
+}
+
+StatusOr<float> BME680Sensor::GetVOCLevel() {
+  if (out_.voc.time_stamp == 0) {
+    return Status(-1, "Cannot read voc level from bme680 sensor") ;
+  } 
+  float voc = out_.voc.signal;
+  LOG(LL_DEBUG, ("bme280 readings: voc %.0f", voc));
+
+  return voc;
 }
 
 }  // namespace shelly
