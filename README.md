@@ -4,10 +4,11 @@
 # Personal Branch 
 
 The intention of this branch:
- * support my custom devices, mainly a ESP32 based 16 channel switch
+ * support my custom devices, mainly a ESP32 based 16 channel switch [![Hardware](https://oshwlab.com/nikwest/switch-esp32_copy)]
+ * support for esp dev boards (both esp8266 / esp32) (see Custom2 example)
  * add features which are not officially supported, in particular 
     * Prometheus support
-    * external temperature sensors
+    * external temperature sensors (SHT3x, BME280/BMP280, BME680, HTU21DF, SI7021)
     
 # Open Source Apple HomeKit Firmware for Shelly Devices
 
