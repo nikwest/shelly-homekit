@@ -14,18 +14,20 @@ namespace shelly {
 
 class BME680Sensor : public TempSensor, public PressureSensor, public HumiditySensor, 
                       public CO2Sensor, public AirQualitySensor {
- public:
-  BME680Sensor();
-  virtual ~BME680Sensor();
+  public:
+    BME680Sensor();
+    virtual ~BME680Sensor();
 
-  StatusOr<float> GetTemperature() override;
-  StatusOr<float> GetPressure() override;
-  StatusOr<float> GetHumidity() override;
-  StatusOr<float> GetCO2Level() override;
-  StatusOr<float> GetIAQLevel() override;
-  StatusOr<float> GetVOCLevel() override;
+    StatusOr<float> GetTemperature() override;
+    StatusOr<float> GetPressure() override;
+    StatusOr<float> GetHumidity() override;
+    StatusOr<float> GetCO2Level() override;
+    StatusOr<float> GetIAQLevel() override;
+    StatusOr<float> GetVOCLevel() override;
 
-  struct mgos_bsec_output out_;
+    struct mgos_bsec_output out_;
+
+    void Notify();
 };
 
 }  // namespace shelly

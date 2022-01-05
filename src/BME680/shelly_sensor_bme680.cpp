@@ -40,6 +40,7 @@ static void bme680_output_cb(int ev, void *ev_data, void *arg) {
                   out->temp.signal, out->rh.signal, ps_hpa));
   }
   sensor->out_ = *out;
+  sensor->Notify();
   (void) ev;
 }
 
@@ -52,6 +53,7 @@ BME680Sensor::BME680Sensor() {
 }
 
 BME680Sensor::~BME680Sensor() {
+  mgos_event_remove_handler(MGOS_EV_BME680_BSEC_OUTPUT, bme680_output_cb, this);
 }
 
 StatusOr<float> BME680Sensor::GetTemperature() {
@@ -112,6 +114,24 @@ StatusOr<float> BME680Sensor::GetVOCLevel() {
   LOG(LL_DEBUG, ("bme280 readings: voc %.0f", voc));
 
   return voc;
+}
+
+void BME680Sensor::Notify() {
+  if(TempSensor::notify_ != nullptr) {
+    TempSensor::notify_();
+  }
+  if(HumiditySensor::notify_ != nullptr) {
+    HumiditySensor::notify_();
+  }
+  if(PressureSensor::notify_ != nullptr) {
+    PressureSensor::notify_();
+  }
+  if(AirQualitySensor::notify_ != nullptr) {
+    AirQualitySensor::notify_();
+  }
+  if(CO2Sensor::notify_ != nullptr) {
+    CO2Sensor::notify_();
+  }
 }
 
 }  // namespace shelly

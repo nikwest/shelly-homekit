@@ -28,6 +28,8 @@ class HumiditySensor {
   HumiditySensor(const HumiditySensor &other) = delete;
 
   virtual StatusOr<float> GetHumidity() = 0;
+
+  std::function<void()> notify_;
 };
 
 }  // namespace shelly

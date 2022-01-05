@@ -28,6 +28,8 @@ class PressureSensor {
   PressureSensor(const PressureSensor &other) = delete;
 
   virtual StatusOr<float> GetPressure() = 0;
+
+    std::function<void()> notify_;
 };
 
 }  // namespace shelly

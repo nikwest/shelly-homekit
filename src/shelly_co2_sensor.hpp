@@ -28,6 +28,8 @@ class CO2Sensor {
   CO2Sensor(const CO2Sensor &other) = delete;
 
   virtual StatusOr<float> GetCO2Level() = 0;
+
+  std::function<void()> notify_;
 };
 
 }  // namespace shelly

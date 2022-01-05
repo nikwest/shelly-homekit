@@ -29,6 +29,8 @@ class AirQualitySensor {
 
   virtual StatusOr<float> GetVOCLevel() = 0;
   virtual StatusOr<float> GetIAQLevel() = 0;
+
+  std::function<void()> notify_;
 };
 
 }  // namespace shelly

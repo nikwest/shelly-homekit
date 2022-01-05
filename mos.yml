@@ -730,7 +730,11 @@ conds:
 #        - ["se1.i2c_addr", 0x76] # bmp280
         - ["se1.model", 5]
         - ["bme680.i2c_addr", 0x77] # bme680
-        - ["bme680.enable", false]
+        - ["bme680.enable", true]
+        - ["bme680.bsec.iaq_sample_rate", "ULP"]
+        - ["bme680.bsec.temp_sample_rate", "ULP"]
+        - ["bme680.bsec.rh_sample_rate", "ULP"]
+        - ["bme680.bsec.ps_sample_rate", "ULP"]
 #        - ["se1.model", 2]
 #        - ["se1.i2c_addr", 0x40] # htu21
         # Only for backward compatibility (config <= v3).

@@ -41,11 +41,11 @@ class ShellySensor : public Component {
 
  protected:
    struct mgos_config_se *cfg_;
-   std::unique_ptr<TempSensor> temp_;
-   std::unique_ptr<PressureSensor> pressure_;
-   std::unique_ptr<HumiditySensor> humidity_; 
-   std::unique_ptr<CO2Sensor> co2_; 
-   std::unique_ptr<AirQualitySensor> air_; 
+   TempSensor* temp_;
+   PressureSensor* pressure_;
+   HumiditySensor* humidity_; 
+   CO2Sensor* co2_; 
+   AirQualitySensor* air_; 
 };
 
 }  // namespace shelly

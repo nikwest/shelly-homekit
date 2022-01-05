@@ -35,10 +35,15 @@ ShellySensor::ShellySensor(int id, struct mgos_config_se *cfg)
 }
 
 ShellySensor::~ShellySensor() {
-  temp_.release();
-  humidity_.release();
-  pressure_.release();
-  co2_.release();
+  if(temp_ != nullptr) {
+    delete temp_;
+  } else if(humidity_ != nullptr) {
+    delete humidity_;
+  } else if(pressure_ != nullptr) {
+    delete pressure_;
+  } else if(co2_ != nullptr) {
+    delete co2_;
+  } 
 }
 
 Component::Type ShellySensor::type() const {
@@ -205,13 +210,15 @@ Status ShellySensor::Init() {
     break;  
   case kBME680:
     #ifdef HAVE_BME680
-    {
-      auto* sensor(new BME680Sensor());
-      temp_.reset(sensor);
-      humidity_.reset(sensor);
-      pressure_.reset(sensor);
-      co2_.reset(sensor);
-      air_.reset(sensor);
+    if(mgos_sys_config_get_bme680_enable()) {
+      auto *sensor(new BME680Sensor());
+      temp_ = sensor;
+      humidity_ = sensor;
+      pressure_ = sensor;
+      co2_ = sensor;
+      air_ = sensor;
+    } else {
+      LOG(LL_WARN, ("bme680.enabled is set to false in mos.yml, cannot add sensor"));
     }
     #else 
     //  #warning "HAVE_BME680 not enabled"

@@ -25,8 +25,6 @@ class Sensor : public ShellySensor {
 
   Status Init(std::unique_ptr<mgos::hap::Accessory> *acc);
 
- // Status AddToAcc(mgos::hap::Accessory *acc);
-
  protected:
  //  std::vector<std::unique_ptr<mgos::hap::Service>> services_;
 

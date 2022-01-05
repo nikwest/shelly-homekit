@@ -46,19 +46,24 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
     );
     // Name
     s->AddNameChar(iid++, "Temperature");
-    s->AddChar(new mgos::hap::FloatCharacteristic(
-      iid++, &kHAPCharacteristicType_CurrentTemperature, 0.0, 100.0, 0.1,
+    auto* c = new mgos::hap::FloatCharacteristic(
+      iid++, &kHAPCharacteristicType_CurrentTemperature, 0.0F, 100.0F, 0.1F,
       [this](HAPAccessoryServerRef *, const HAPFloatCharacteristicReadRequest *,
           float *value) {
         auto temperature = temp_->GetTemperature();
         if (!temperature.ok()) return kHAPError_Busy;
         *value = temperature.ValueOrDie();
-        LOG(LL_INFO, ("Reading temp: %f", *value));
+        LOG(LL_DEBUG, ("Reading temp: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
-      kHAPCharacteristicDebugDescription_CurrentTemperature));
-
+      kHAPCharacteristicDebugDescription_CurrentTemperature);
+    s->AddChar(c);
+    temp_->notify_= [c]{
+      if(c != nullptr) {
+        c->RaiseEvent();
+      } 
+    };
     acc->get()->AddService(s);
   }
   if(humidity_) {
@@ -67,19 +72,24 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
     );
     // Name
     s->AddNameChar(iid++, "Humidity");
-    s->AddChar(new mgos::hap::FloatCharacteristic(
+    auto *c = new mgos::hap::FloatCharacteristic(
       iid++, &kHAPCharacteristicType_CurrentRelativeHumidity, 0.0F, 100.0F, 0.1F,
       [this](HAPAccessoryServerRef *, const HAPFloatCharacteristicReadRequest *,
           float *value) {
         auto humidity = humidity_->GetHumidity();
         if (!humidity.ok()) return kHAPError_Busy;
         *value = humidity.ValueOrDie();
-        LOG(LL_INFO, ("Reading humidity: %f", *value));
+        LOG(LL_DEBUG, ("Reading humidity: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
-      kHAPCharacteristicDebugDescription_CurrentRelativeHumidity));
-
+      kHAPCharacteristicDebugDescription_CurrentRelativeHumidity);
+    s->AddChar(c);
+    humidity_->notify_= [c]{
+      if(c != nullptr) {
+        c->RaiseEvent();
+      } 
+    };
     acc->get()->AddService(s);
   }
  
@@ -89,19 +99,24 @@ if(pressure_) {
     );
     // Name
     s->AddNameChar(iid++, "Pressure");
-    s->AddChar(new mgos::hap::FloatCharacteristic(
+    auto* c = new mgos::hap::FloatCharacteristic(
       iid++, &kHAPCharacteristic_EveCurrentAtmosphericPressure, 0.0F, 200000.0F, 0.1F,
       [this](HAPAccessoryServerRef *, const HAPFloatCharacteristicReadRequest *,
           float *value) {
         auto pressure = pressure_->GetPressure();
         if (!pressure.ok()) return kHAPError_Busy;
         *value = pressure.ValueOrDie();
-        LOG(LL_INFO, ("Reading pressure: %f", *value));
+        LOG(LL_DEBUG, ("Reading pressure: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
-      "eve-atmospheric-pressure"));
-
+      "eve-atmospheric-pressure");
+    s->AddChar(c);
+    pressure_->notify_= [c]{
+      if(c != nullptr) {
+        c->RaiseEvent();
+      } 
+    };
     acc->get()->AddService(s);
   }
  
@@ -111,49 +126,61 @@ if(pressure_) {
     );
     // Name
     s->AddNameChar(iid++, "Air Quality");
-    s->AddChar(new mgos::hap::UInt8Characteristic(
+    auto* c = new mgos::hap::UInt8Characteristic(
       iid++, &kHAPCharacteristicType_AirQuality, 0, 5, 1,
       [this](HAPAccessoryServerRef *, const HAPUInt8CharacteristicReadRequest *,
           uint8_t *value) {
         auto iaq = air_->GetIAQLevel();
         if (!iaq.ok()) return kHAPError_Busy;
         *value = (int) roundf(iaq.ValueOrDie() / 100);
-        LOG(LL_INFO, ("Reading iaq: %d", *value));
+        LOG(LL_DEBUG, ("Reading iaq: %d", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
-      kHAPCharacteristicDebugDescription_AirQuality)
-    );
-
-    s->AddChar(new mgos::hap::FloatCharacteristic(
+      kHAPCharacteristicDebugDescription_AirQuality);
+    s->AddChar(c);
+    auto* c2 = new mgos::hap::FloatCharacteristic(
       iid++, &kHAPCharacteristicType_VOCDensity, 0.0F, 1000.0F, 0.1F,
       [this](HAPAccessoryServerRef *, const HAPFloatCharacteristicReadRequest *,
           float *value) {
         auto voc = air_->GetVOCLevel();
         if (!voc.ok()) return kHAPError_Busy;
         *value = voc.ValueOrDie();
-        LOG(LL_INFO, ("Reading voc: %f", *value));
+        LOG(LL_DEBUG, ("Reading voc: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
-      kHAPCharacteristicDebugDescription_VOCDensity)
-    );
+      kHAPCharacteristicDebugDescription_VOCDensity);
+    s->AddChar(c2);
+    air_->notify_= [c, c2]{
+      if(c != nullptr) {
+        c->RaiseEvent();
+      } 
+      if(c2 != nullptr) {
+        c2->RaiseEvent();
+      } 
+    };
 
     if(co2_) {
-      s->AddChar(new mgos::hap::FloatCharacteristic(
+      auto* c = new mgos::hap::FloatCharacteristic(
         iid++, &kHAPCharacteristicType_CarbonDioxideLevel, 0.0F, 10000.0F, 1.0F,
         [this](HAPAccessoryServerRef *, const HAPFloatCharacteristicReadRequest *,
             float *value) {
           auto co2 = co2_->GetCO2Level();
           if (!co2.ok()) return kHAPError_Busy;
           *value = co2.ValueOrDie();
-          LOG(LL_INFO, ("Reading co2: %f", *value));
+          LOG(LL_DEBUG, ("Reading co2: %f", *value));
           return kHAPError_None;
         },
         true /* supports_notification */, nullptr /* write_handler */,
-        kHAPCharacteristicDebugDescription_CarbonDioxideLevel)
-      );
+        kHAPCharacteristicDebugDescription_CarbonDioxideLevel);
+      s->AddChar(c);
     }
+        co2_->notify_= [c]{
+      if(c != nullptr) {
+        c->RaiseEvent();
+      } 
+    };
     acc->get()->AddService(s);
   } else if(co2_) {
     auto* s(
@@ -168,7 +195,7 @@ if(pressure_) {
         auto co2 = co2_->GetCO2Level();
         if (!co2.ok()) return kHAPError_Busy;
         *value = (co2.ValueOrDie() > mgos_sys_config_get_co2_detected_level()) ? 1 : 0;
-        LOG(LL_INFO, ("Reading co2 detected: %d", *value));
+        LOG(LL_DEBUG, ("Reading co2 detected: %d", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
@@ -182,7 +209,7 @@ if(pressure_) {
         auto co2 = co2_->GetCO2Level();
         if (!co2.ok()) return kHAPError_Busy;
         *value = co2.ValueOrDie();
-        LOG(LL_INFO, ("Reading co2: %f", *value));
+        LOG(LL_DEBUG, ("Reading co2: %f", *value));
         return kHAPError_None;
       },
       true /* supports_notification */, nullptr /* write_handler */,
