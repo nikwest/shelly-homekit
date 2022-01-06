@@ -59,7 +59,10 @@ void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
 void HandleInputResetSequence(Input *in, int out_gpio, Input::Event ev,
                               bool cur_state);
 
+void StopService();
 void RestartService();
+
+bool AllComponentsIdle();
 
 StatusOr<int> GetSystemTemperature();
 
@@ -68,10 +71,10 @@ StatusOr<int> GetSystemTemperature();
 #define SHELLY_SERVICE_FLAG_OVERHEAT (1 << 2)
 #define SHELLY_SERVICE_FLAG_REVERT (1 << 3)
 uint8_t GetServiceFlags();
+void SetServiceFlags(uint8_t flags);
+void ClearServiceFlags(uint8_t flags);
 
 HAPError AccessoryIdentifyCB(const HAPAccessoryIdentifyRequest *request);
-
-int GetOTAProgress();
 
 // Implemented for each model.
 
