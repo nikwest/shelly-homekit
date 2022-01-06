@@ -156,11 +156,11 @@ Status ShellySensor::Init() {
     #ifdef HAVE_BMX280
     {
       auto* sensor(new BMP280Sensor(cfg_->i2c_bus,  cfg_->i2c_addr));
-      temp_.reset(sensor);
-      humidity_.reset(nullptr);
-      pressure_.reset(sensor);
-      co2_.reset(nullptr);
-      air_.reset(nullptr);
+      temp_ = sensor;
+      humidity_ = nullptr;
+      pressure_ = sensor;
+      co2_ = nullptr;
+      air_ = nullptr;
     }
     #else 
     //  #warning "HAVE_BMX280 not enabled"
@@ -170,11 +170,11 @@ Status ShellySensor::Init() {
     #ifdef HAVE_HTU21DF
     {
       auto* sensor(new HTU21DFSensor(cfg_->i2c_bus,  cfg_->i2c_addr));
-      temp_.reset(sensor);
-      humidity_.reset(sensor);
-      pressure_.reset(nullptr);
-      co2_.reset(nullptr);
-      air_.reset(nullptr);
+      temp_ = sensor;
+      humidity_ = sensor;
+      pressure_ = nullptr;
+      co2_ = nullptr;
+      air_ = nullptr;
    }
     #else 
     //  #warning "HAVE_HTU21DF not enabled"
@@ -184,11 +184,11 @@ Status ShellySensor::Init() {
     #ifdef HAVE_SHT3X
     {
       auto* sensor(new SHT3xSensor(cfg_->i2c_bus,  cfg_->i2c_addr));
-      temp_.reset(sensor);
-      humidity_.reset(sensor);
-      pressure_.reset(nullptr);
-      co2_.reset(nullptr);
-      air_.reset(nullptr);
+      temp_ = sensor;
+      humidity_ = sensor;
+      pressure_= nullptr;
+      co2_ = nullptr;
+      air_ = nullptr;
     }
     #else 
     //  #warning "HAVE_SHT3X not enabled"
@@ -198,11 +198,11 @@ Status ShellySensor::Init() {
     #ifdef HAVE_SI7021
     {
       auto* sensor(new SI7021Sensor(cfg_->i2c_bus,  cfg_->i2c_addr));
-      temp_.reset(sensor);
-      humidity_.reset(sensor);
-      pressure_.reset(nullptr);
-      co2_.reset(nullptr);
-      air_.reset(nullptr);
+      temp_ = sensor;
+      humidity_ = sensor;
+      pressure_ = nullptr;
+      co2_ = nullptr;
+      air_ = nullptr;
    }
     #else 
     //  #warning "HAVE_SI7021 not enabled"

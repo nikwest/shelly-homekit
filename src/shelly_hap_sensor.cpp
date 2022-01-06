@@ -47,7 +47,7 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
     // Name
     s->AddNameChar(iid++, "Temperature");
     auto* c = new mgos::hap::FloatCharacteristic(
-      iid++, &kHAPCharacteristicType_CurrentTemperature, 0.0F, 100.0F, 0.1F,
+      iid++, &kHAPCharacteristicType_CurrentTemperature, -50.0F, 100.0F, 0.1F,
       [this](HAPAccessoryServerRef *, const HAPFloatCharacteristicReadRequest *,
           float *value) {
         auto temperature = temp_->GetTemperature();
@@ -145,7 +145,7 @@ if(pressure_) {
           float *value) {
         auto voc = air_->GetVOCLevel();
         if (!voc.ok()) return kHAPError_Busy;
-        *value = voc.ValueOrDie();
+        *value = voc.ValueOrDie(); // * 1000.0F; // ug/m3?
         LOG(LL_DEBUG, ("Reading voc: %f", *value));
         return kHAPError_None;
       },

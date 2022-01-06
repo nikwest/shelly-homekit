@@ -651,28 +651,28 @@ conds:
 
   - when: build_vars.MODEL == "Custom2"
     apply:
-      platform: esp32
+#      platform: esp32
       name: switch
       sources:
 #        - src/BMX280
-#        - src/HTU21DF
+        - src/HTU21DF
 #        - src/SHT3X
 #        - src/SI7021
-        - src/BME680
+#        - src/BME680
       filesystem:
-        - fs_BME680
+#        - fs_BME680
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
-          variant: esp32
-#          variant: esp8266-nossl
+#          variant: esp32
+          variant: esp8266-nossl
  #       - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
  #       - location: https://github.com/mongoose-os-libs/sht31-i2c     
  #       - location: https://github.com/mongoose-os-libs/bme280
- #       - location: https://github.com/mongoose-os-libs/htu21df-i2c
+        - location: https://github.com/mongoose-os-libs/htu21df-i2c
  #       - location: https://github.com/mongoose-os-libs/si7021-i2c
-        - location: https://github.com/mongoose-os-libs/bme680
+ #       - location: https://github.com/mongoose-os-libs/bme680
         - location: https://github.com/mongoose-os-libs/i2c
       # build_vars:
       #   FLASH_SIZE: 2097152  #esp 8266:  4194304
@@ -687,8 +687,8 @@ conds:
         BME280_64BIT_ENABLE : 1
 #        HAVE_SHT3X : 1
 #        HAVE_BMX280 : 1
-        HAVE_BME680 : 1
-#        HAVE_HTU21DF : 1
+#        HAVE_BME680 : 1
+        HAVE_HTU21DF : 1
 #        HAVE_SI7021 : 1
       config_schema:
         - ["dash.enable", true]
@@ -724,19 +724,19 @@ conds:
         - ["gdo1.name", "Garage Door"]
         - ["se1", "se", {title: "Sensor 1 settings"}]
         - ["se1.name", "Sensor 1"]
-#        - ["se1.model", 3] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
-#        - ["se1.i2c_addr", 0x45] # sht3x
+        # - ["se1.model", 3] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
+        # - ["se1.i2c_addr", 0x45] # sht3x
 #        - ["se1.model", 0]
 #        - ["se1.i2c_addr", 0x76] # bmp280
-        - ["se1.model", 5]
-        - ["bme680.i2c_addr", 0x77] # bme680
-        - ["bme680.enable", true]
-        - ["bme680.bsec.iaq_sample_rate", "ULP"]
-        - ["bme680.bsec.temp_sample_rate", "ULP"]
-        - ["bme680.bsec.rh_sample_rate", "ULP"]
-        - ["bme680.bsec.ps_sample_rate", "ULP"]
-#        - ["se1.model", 2]
-#        - ["se1.i2c_addr", 0x40] # htu21
+        # - ["se1.model", 5]
+        # - ["bme680.i2c_addr", 0x77] # bme680
+        # - ["bme680.enable", true]
+        # - ["bme680.bsec.iaq_sample_rate", "ULP"]
+        # - ["bme680.bsec.temp_sample_rate", "ULP"]
+        # - ["bme680.bsec.rh_sample_rate", "ULP"]
+        # - ["bme680.bsec.ps_sample_rate", "ULP"]
+        - ["se1.model", 2]
+        - ["se1.i2c_addr", 0x40] # htu21
         # Only for backward compatibility (config <= v3).
         - ["ssw1", "ssw", {title: "SSW1 settings"}]
         - ["ssw1.name", "Input 1"]
