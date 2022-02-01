@@ -1,6 +1,6 @@
 author: Shelly-HomeKit contributors
 description: A HomeKit firmware for Shelly switches
-version: 2.11.0-alpha6
+version: 2.11.0-alpha9
 
 libs_version: latest
 modules_version: latest
@@ -32,11 +32,16 @@ config_schema:
   - ["sntp.enable", true]
 
   - ["shelly.name", "s", "", {title: "User-facing device name"}]  # Note: will be overridden by cfg 2 -> 3 migration.
-  - ["shelly.mode", "i", 0, {title: "System mode: 0 - default, 1 - roller shutter (if supported), 2 - garage door opener (if supported), 3 - RGB (if supported), 4 - RGBW (if supported)"}]
+  - ["shelly.mode", "i", 0, {title: "System mode: 0 - default, 1 - roller shutter (if supported), 2 - garage door opener (if supported), 3 - RGB (if supported), 4 - RGBW (if supported), 5 - RGB+W (if supported), 6 - CCT (if supported), 7 - White Mode (if supported)"}]
   - ["shelly.cfg_version", "i", 0, {title: "Configuration version"}]
   - ["shelly.legacy_hap_layout", "b", false, {title: "Use legacy accessory layout instead of a bridged accessory"}]
   - ["shelly.overheat_on", "i", 100, {title: "Overheat protection mode kicks in at or above this temperature"}]
   - ["shelly.overheat_off", "i", 90, {title: "Overheat protection mode turns off when the temperature is back below this threshold"}]
+
+  - ["ts", "o", {title: "Temperature Sensor settings", abstract: true}]
+  - ["ts.name", "s", "", {title: "Name of the sensor"}]
+  - ["ts.unit", "i", 0, {title: "Display unit of the Sensor"}] # 0 - Celsius, 1 - Farenheit
+  - ["ts.update_interval", "i", 1, {title: "Update Interval of the sensor in seconds, minimum 1s"}]
 
   - ["sw", "o", {title: "Switch settings", abstract: true}]
   - ["sw.name", "s", "", {title: "Name of the switch"}]
@@ -89,6 +94,7 @@ config_schema:
 
   - ["lb", "o", {title: "Light bulb settings", abstract: true}]
   - ["lb.name", "s", "Light bulb", {title: "Accessory name"}]
+  - ["lb.svc_hidden", "b", false, {title: "Whether HAP service is hidden"}]
   - ["lb.enable", "b", true, {title: "Enable this light in the accessory"}]
   - ["lb.in_mode", "i", 1, {title: "-1 - Absent, 0 - Momentary, 1 - Toggle, 2 - Edge, 3 - Detached"}]
   - ["lb.in_inverted", "b", false, {title: "Invert input, set to true for normally closed input"}]
@@ -96,6 +102,7 @@ config_schema:
   - ["lb.hue", "i", 0, {title: "Hue of the light"}]
   - ["lb.brightness", "i", 100, {title: "Brightness of the light"}]
   - ["lb.saturation", "i", 100, {title: "Saturation of the light"}]
+  - ["lb.color_temperature", "i", 400, {title: "Color Temperature of the light"}]
   - ["lb.initial_state", "i", 3, {title: "Initial state on power-on: 0 - off, 1 - on, 2 - restore last state, 3 - matches input if in toggle mode, otherwise off"}]
   - ["lb.auto_off", "b", false, {title: "Whether the switch should automatically turn OFF after turning ON"}]
   - ["lb.auto_off_delay", "d", 0, {title: "Delay for automatically turning OFF, in seconds"}]
@@ -133,10 +140,13 @@ cdefs:
   PRODUCT_VENDOR: '"Allterco"'
   PRODUCT_MODEL: '"${build_vars.MODEL}"'
   LED_GPIO: -1
+  LED_ON: 0
   BTN_GPIO: -1
+  BTN_DOWN: 0
   BTN_NOISY: 1
   RST_GPIO_INIT: -1
   SHELLY_HAVE_DUAL_INPUT_MODES: 0
+  MAX_NUM_HAP_SESSIONS: 12
 
 libs:
   - location: ./libreset
@@ -160,7 +170,10 @@ conds:
   - when: build_vars.MODEL == "Shelly1"
     apply:
       name: switch1 # To allow OTA from stock fw.
+      sources:
+        - src/DS18XXX
       libs:
+        - location: https://github.com/mongoose-os-libs/onewire
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: esp8266-nossl
       build_vars:
@@ -177,6 +190,12 @@ conds:
         - ["device.id", "shelly1-??????"]
         - ["shelly.name", "shelly1-??????"]
         - ["wifi.ap.ssid", "shelly1-??????"]
+        - ["ts1", "ts", {title: "TS1 settings"}]
+        - ["ts1.name", "Shelly TS1"]
+        - ["ts2", "ts", {title: "TS2 settings"}]
+        - ["ts2.name", "Shelly TS2"]
+        - ["ts3", "ts", {title: "TS3 settings"}]
+        - ["ts3.name", "Shelly TS3"]
         - ["sw1", "sw", {title: "SW1 settings"}]
         - ["sw1.name", "Shelly SW"]
         - ["in1", "in", {title: "Input 1 settings"}]
@@ -231,7 +250,10 @@ conds:
   - when: build_vars.MODEL == "Shelly1PM"
     apply:
       name: switch1pm # To allow OTA from stock fw.
+      sources:
+        - src/DS18XXX
       libs:
+        - location: https://github.com/mongoose-os-libs/onewire
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: esp8266-nossl
       build_vars:
@@ -254,6 +276,12 @@ conds:
         - ["wifi.ap.ssid", "shelly1pm-??????"]
         - ["sw1", "sw", {title: "SW settings"}]
         - ["sw1.name", "Shelly SW"]
+        - ["ts1", "ts", {title: "TS1 settings"}]
+        - ["ts1.name", "Shelly TS1"]
+        - ["ts2", "ts", {title: "TS2 settings"}]
+        - ["ts2.name", "Shelly TS2"]
+        - ["ts3", "ts", {title: "TS3 settings"}]
+        - ["ts3.name", "Shelly TS3"]
         - ["in1", "in", {title: "Input 1 settings"}]
         - ["in1.ssw.name", "Shelly SSW1"]
         - ["in1.sensor.name", "Shelly S1"]
@@ -352,6 +380,53 @@ conds:
         - ["ssw1.name", "Input 1"]
         - ["ssw2", "ssw", {title: "SSW2 settings"}]
         - ["ssw2.name", "Input 2"]
+
+  - when: build_vars.MODEL == "ShellyColorBulb"
+    apply:
+      name: color-bulb # To allow OTA from stock fw.
+      libs:
+        - origin: https://github.com/mongoose-os-libs/mongoose
+          variant: esp8266-nossl
+      build_vars:
+        FLASH_SIZE: 2097152
+        FS_SIZE: 262144
+        BOOT_CONFIG_ADDR: 0x1000  # To be compatible with stock firmware.
+        MGOS_ROOT_FS_TYPE: SPIFFS
+      cdefs:
+        PWM_SUPPORT: 1
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '"SHCB-1"'
+        # We don't use SSL, HomeKit uses its own crypto. This saves ~120K.
+        MG_ENABLE_SSL: 0
+      config_schema:
+        - ["shelly.mode", 4] # 4 - RGBW"
+        - ["device.id", "shellycolorbulb-??????"]
+        - ["shelly.name", "shellycolorbulb-??????"]
+        - ["wifi.ap.ssid", "shellycolorbulb-??????"]
+        - ["lb1", "lb", {title: "RGBW "}]
+        - ["lb1.initial_state", 2] # last
+
+  - when: build_vars.MODEL == "ShellyDuo"
+    apply:
+      name: bulbduo # To allow OTA from stock fw.
+      libs:
+        - origin: https://github.com/mongoose-os-libs/mongoose
+          variant: esp8266-nossl
+      build_vars:
+        FLASH_SIZE: 2097152
+        FS_SIZE: 262144
+        MGOS_ROOT_FS_TYPE: SPIFFS
+      cdefs:
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '"SHBDUO-1"'
+        # We don't use SSL, HomeKit uses its own crypto. This saves ~120K.
+        MG_ENABLE_SSL: 0
+      config_schema:
+        - ["device.id", "ShellyBulbDuo-??????"]
+        - ["shelly.name", "ShellyBulbDuo-??????"]
+        - ["wifi.ap.ssid", "ShellyBulbDuo-??????"]
+        - ["lb1", "lb", {title: "Light bulb settings"}]
+        - ["lb1.initial_state", 2] # last
 
   - when: build_vars.MODEL == "ShellyI3"
     apply:
@@ -474,7 +549,7 @@ conds:
         BTN_DOWN: 0
         PRODUCT_HW_REV: '"0.1.6"'
         STOCK_FW_MODEL: '"Plus1"'
-        xMGOS_CONFIG_DEV_1: '"aux"'
+        MAX_NUM_HAP_SESSIONS: 16
       config_schema:
         - ["device.id", "ShellyPlus1-??????"]
         - ["shelly.name", "ShellyPlus1-??????"]
@@ -509,6 +584,7 @@ conds:
         BTN_DOWN: 0
         PRODUCT_HW_REV: '"0.1.6"'
         STOCK_FW_MODEL: '"Plus1PM"'
+        MAX_NUM_HAP_SESSIONS: 16
       config_schema:
         - ["device.id", "ShellyPlus1PM-??????"]
         - ["shelly.name", "ShellyPlus1PM-??????"]
@@ -553,14 +629,81 @@ conds:
         # We don't use SSL, HomeKit uses its own crypto. This saves ~120K.
         MG_ENABLE_SSL: 0
       config_schema:
-        - ["shelly.mode", 3] # 3 - RGB, 4 - RGBW"
+        - ["shelly.mode", 3] # 3 - RGB, 4 - RGBW, 5 - RGB+W, 6 - CCT, 7 - White
         - ["device.id", "shellyrgbw2-??????"]
         - ["shelly.name", "shellyrgbw2-??????"]
         - ["wifi.ap.ssid", "shellyrgbw2-??????"]
-        - ["lb1", "lb", {title: "RGB 1 settings"}]
+        - ["lb1", "lb", {title: "Light 1 settings"}]
+        - ["lb2", "lb", {title: "Light 2 settings"}]
+        - ["lb2.initial_state", 2] #input only available to lb1
+        - ["lb3", "lb", {title: "Light 3 settings"}]
+        - ["lb3.initial_state", 2] #input only available to lb1
+        - ["lb4", "lb", {title: "Light 4 settings"}]
+        - ["lb4.initial_state", 2] #input only available to lb1
         - ["in1", "in", {title: "Input 1 settings"}]
         - ["in1.ssw.name", "Shelly SSW1"]
         - ["in1.sensor.name", "Shelly S1"]
+
+  - when: build_vars.MODEL == "ShellyVintage"
+    apply:
+      name: bulb6w # To allow OTA from stock fw.
+      libs:
+        - origin: https://github.com/mongoose-os-libs/mongoose
+          variant: esp8266-nossl
+      build_vars:
+        FLASH_SIZE: 2097152
+        FS_SIZE: 262144
+        MGOS_ROOT_FS_TYPE: SPIFFS
+      cdefs:
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '"SHVIN-1"'
+        # We don't use SSL, HomeKit uses its own crypto. This saves ~120K.
+        MG_ENABLE_SSL: 0
+      config_schema:
+        - ["device.id", "ShellyVintage-??????"]
+        - ["shelly.name", "ShellyVintage-??????"]
+        - ["wifi.ap.ssid", "ShellyVintage-??????"]
+        - ["lb1", "lb", {title: "Light bulb settings"}]
+        - ["lb1.initial_state", 2] # last
+
+  # Test device for BLE development.
+  - when: build_vars.MODEL == "ShellyT32"
+    apply:
+      libs:
+        # adding bt-common enables BLE support at compile time
+        #- origin: https://github.com/mongoose-os-libs/bt-common
+        #- origin: https://github.com/mongoose-os-libs/ethernet
+      build_vars:
+        APP_SLOT_SIZE: 0x1b0000
+        MGOS_HAP_BLE: 1
+        MGOS_ROOT_FS_TYPE: LFS
+        ESP_IDF_EXTRA_PARTITION: "aux,data,0x88,0x3f0000,48K,encrypted"
+        ESP_IDF_SDKCONFIG_OPTS: >
+          ${build_vars.ESP_IDF_SDKCONFIG_OPTS}
+            CONFIG_FREERTOS_UNICORE=y
+      cdefs:
+        LED_GPIO: 13
+        LED_ON: 1
+        BTN_GPIO: 34
+        BTN_DOWN: 0
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '"XXX"'
+        SHELLY_HAVE_PM: 0
+        BTN_NOISY: 0
+        MGOS_CONFIG_DEV_3: '"aux"'
+      config_schema:
+        # - ["bt.enable", true]
+        - ["bt.adv_enable", false] # ADK controls advertisement.
+        - ["bt.keep_enabled", true]
+        - ["device.id", "ShellyT32-????"]
+        - ["shelly.name", "ShellyT32-????"]
+        - ["wifi.ap.ssid", "ShellyT32-??????"]
+        - ["sw1", "sw", {"title": "SW settings"}]
+        - ["sw1.name", "SWT32"]
+        - ["sw1.in_mode", 0]
+        - ["in1", "in", {title: "Input 1 settings"}]
+        - ["in1.ssw.name", "SSWT32"]
+        - ["in1.sensor.name", "ST32"]
 
   - when: mos.platform != "ubuntu"
     apply:
@@ -576,7 +719,6 @@ conds:
         - ["wifi.sta_connect_timeout", 15]
         - ["wifi.sta_roam_rssi_thr", -80]
         - ["wifi.sta_roam_interval", 600]
-        - ["wifi.sta_ps_mode", 1]  # Light sleep.
         - ["wifi.ap.keep_enabled", "b", false, {title: "Keep WiFi AP enabled even when STA is connected"}]
         # This is a mitigation for devices dropping of wifi and never coming back.
         # This is believed to be fixed, default has been flipped back to 0 in 2.11.0.
@@ -614,6 +756,10 @@ conds:
         - ["device.id", "ShellyU-????"]
         - ["shelly.name", "ShellyU-????"]
         - ["file_logger.dir", "./"]
+        - ["ts1", "ts", {title: "TS1 settings"}]
+        - ["ts1.name", "Shelly TS"]
+        - ["ts2", "ts", {title: "TS2 settings"}]
+        - ["ts2.name", "Shelly TS"]
         - ["sw1", "sw", {title: "SW1 settings"}]
         - ["sw1.name", "ShellyU SW1"]
         - ["in1", "in", {title: "Input 1 settings"}]
@@ -625,6 +771,7 @@ conds:
       sources:
         - src/Shelly25/shelly_init_components.cpp  # Same components as Shelly25
         - src/mock/pwm
+        - src/mock/wifi_config
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: ubuntu-nossl
@@ -653,31 +800,93 @@ conds:
         - ["gdo1", "gdo", {title: "GDO1 settings"}]
         - ["gdo1.name", "ShellyU25 GDO"]
 
-  - when: build_vars.MODEL == "Custom2"
+  - when: build_vars.SENSOR != ""
     apply:
-#      platform: esp32
-      name: switch
       sources:
-        - src/BMX280
-#        - src/HTU21DF
-#        - src/SHT3X
-#        - src/SI7021
-#        - src/BME680
-      filesystem:
-#        - fs_BME680
+        - src/${build_vars.SENSOR}
       libs:
-        - location: https://github.com/mongoose-os-libs/mongoose
-#          variant: esp32
-          variant: esp8266-nossl
- #       - location: https://github.com/mongoose-os-libs/dash # optional
+        - location: https://github.com/mongoose-os-libs/i2c
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
- #       - location: https://github.com/mongoose-os-libs/sht31-i2c     
+
+  - when: build_vars.SENSOR == "BMP280"
+    apply:
+      libs:
         - location: https://github.com/mongoose-os-libs/bme280
- #       - location: https://github.com/mongoose-os-libs/htu21df-i2c
- #       - location: https://github.com/mongoose-os-libs/si7021-i2c
- #       - location: https://github.com/mongoose-os-libs/bme680
-        - location: https://github.com/mongoose-os-libs/i2c
+      cdefs:
+        HAVE_BMX280 : 1
+        BME280_64BIT_ENABLE : 1
+      config_schema:
+        - ["se1.model", 0] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
+        - ["se1.i2c_addr", 0x76]
+
+  - when: build_vars.SENSOR == "BME280"
+    apply:
+      libs:
+        - location: https://github.com/mongoose-os-libs/bme280
+      cdefs:
+        HAVE_BMX280 : 1
+        BME280_64BIT_ENABLE : 1
+      config_schema:
+        - ["se1.model", 1] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
+        - ["se1.i2c_addr", 0x76]
+
+  - when: build_vars.SENSOR == "HTU21DF"
+    apply:
+      libs:
+        - location: https://github.com/mongoose-os-libs/htu21df-i2c
+      cdefs:
+        HAVE_HTU21DF : 1
+      config_schema:
+        - ["se1.model", 2] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
+        - ["se1.i2c_addr", 0x40] # htu21
+
+  - when: build_vars.SENSOR == "SHT3X"
+    apply:
+      libs:
+        - location: https://github.com/mongoose-os-libs/sht31-i2c     
+      cdefs:
+        HAVE_SHT3X : 1
+      config_schema:
+        - ["se1.model", 3] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
+        - ["se1.i2c_addr", 0x45] 
+
+  - when: build_vars.SENSOR == "SI7021"
+    apply:
+      libs:
+        - location: https://github.com/mongoose-os-libs/si7021-i2c
+      cdefs:
+        HAVE_SI7021 : 1
+      config_schema:
+        - ["se1.model", 4] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
+        - ["se1.i2c_addr", 0x40] 
+
+  - when: build_vars.SENSOR == "BME680"
+    apply:
+      filesystem:
+        - fs_BME680
+      libs:
+        - location: https://github.com/mongoose-os-libs/bme680
+      cdefs:
+        HAVE_BME680 : 1
+      config_schema:
+        - ["se1.model", 5]
+        - ["bme680.i2c_addr", 0x77] # bme680
+        - ["bme680.enable", true]
+        - ["bme680.bsec.iaq_sample_rate", "ULP"]
+        - ["bme680.bsec.temp_sample_rate", "ULP"]
+        - ["bme680.bsec.rh_sample_rate", "ULP"]
+        - ["bme680.bsec.ps_sample_rate", "ULP"]
+
+  - when: build_vars.MODEL == "Custom2"
+    apply:
+      platform: esp32
+      name: switch
+      libs:
+        - location: https://github.com/mongoose-os-libs/mongoose
+          variant: esp32-nossl
+ #         variant: esp8266-nossl
+ #       - location: https://github.com/mongoose-os-libs/dash # optional
       # build_vars:
       #   FLASH_SIZE: 2097152  #esp 8266:  4194304
       #   FS_SIZE: 262144
@@ -688,12 +897,6 @@ conds:
         PRODUCT_HW_REV: '"1.0"'
         STOCK_FW_MODEL: '"XXX"'
         MG_ENABLE_SSL: 0
-        BME280_64BIT_ENABLE : 1
-#        HAVE_SHT3X : 1
-        HAVE_BMX280 : 1
-#        HAVE_BME680 : 1
-#        HAVE_HTU21DF : 1
-#        HAVE_SI7021 : 1
       config_schema:
         - ["dash.enable", true]
         - ["dash.token", "xEbCeg4oUbd5X57juJoP90Q"]
@@ -728,19 +931,6 @@ conds:
         - ["gdo1.name", "Garage Door"]
         - ["se1", "se", {title: "Sensor 1 settings"}]
         - ["se1.name", "Sensor 1"]
-        # - ["se1.model", 3] # Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021, 5 - BME680"
-        # - ["se1.i2c_addr", 0x45] # sht3x
-        - ["se1.model", 0]
-        - ["se1.i2c_addr", 0x76] # bmp280
-        # - ["se1.model", 5]
-        # - ["bme680.i2c_addr", 0x77] # bme680
-        # - ["bme680.enable", true]
-        # - ["bme680.bsec.iaq_sample_rate", "ULP"]
-        # - ["bme680.bsec.temp_sample_rate", "ULP"]
-        # - ["bme680.bsec.rh_sample_rate", "ULP"]
-        # - ["bme680.bsec.ps_sample_rate", "ULP"]
-        # - ["se1.model", 2]
-        # - ["se1.i2c_addr", 0x40] # htu21
         # Only for backward compatibility (config <= v3).
         - ["ssw1", "ssw", {title: "SSW1 settings"}]
         - ["ssw1.name", "Input 1"]
@@ -753,15 +943,12 @@ conds:
       name: switch
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
-          variant: esp32
+          variant: esp32-nossl
         - location: https://github.com/mongoose-os-libs/i2c
         - location: https://github.com/mongoose-os-libs/pcf857x-i2c  
         - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
-#        - location: https://github.com/mongoose-os-libs/htu21df-i2c
-#        - location: https://github.com/mongoose-os-libs/sht31-i2c
-        - location: https://github.com/mongoose-os-libs/bme280
       build_vars:
         MGOS_ROOT_FS_TYPE: SPIFFS
       cdefs:
@@ -770,8 +957,6 @@ conds:
         STOCK_FW_MODEL: '"XXX"'
         MG_ENABLE_SSL: 0
         PCF8574: 1
-#        HAVE_HTU21DF : 1
-#       HAVE_BMX280 : 1
       config_schema:
         - ["dash.enable", true]
         - ["dash.token", "Rf0rTOGoK8YE91d90xnc6LgQ"]
@@ -865,43 +1050,38 @@ conds:
         - ["in16", "in", {title: "Input 16 settings"}]
         - ["in16.ssw.name", "Custom SSW16"]
         - ["in16.sensor.name", "Custom S16"]
+
   # Test device for BLE development.
   - when: build_vars.MODEL == "ShellyT32"
+  - when: build_vars.MODEL == "ShellyURGBW2"
     apply:
+      sources:
+        - src/ShellyRGBW2/shelly_init.cpp  # Same components as ShellyRGBW2
+        - src/mock/pwm
+        - src/mock/wifi_config
       libs:
-        # adding bt-common enables BLE support at compile time 
-        #- origin: https://github.com/mongoose-os-libs/bt-common
-        #- origin: https://github.com/mongoose-os-libs/ethernet
-      build_vars:
-        APP_SLOT_SIZE: 0x1b0000
-        MGOS_HAP_BLE: 1
-        MGOS_ROOT_FS_TYPE: LFS
-        ESP_IDF_EXTRA_PARTITION: "aux,data,0x88,0x3f0000,48K,encrypted"
-        ESP_IDF_SDKCONFIG_OPTS: >
-          ${build_vars.ESP_IDF_SDKCONFIG_OPTS}
-            CONFIG_FREERTOS_UNICORE=y
+        - location: https://github.com/mongoose-os-libs/mongoose
+          variant: ubuntu-nossl
       cdefs:
-        LED_GPIO: 13
-        LED_ON: 1
-        BTN_GPIO: 34
-        BTN_DOWN: 0
         PRODUCT_HW_REV: '"1.0"'
-        STOCK_FW_MODEL: '"XXX"'
+        STOCK_FW_MODEL: '""'
+        MG_ENABLE_SSL: 0
         SHELLY_HAVE_PM: 0
         BTN_NOISY: 0
-        MGOS_CONFIG_DEV_3: '"aux"'
       config_schema:
-        # - ["bt.enable", true]
-        - ["bt.adv_enable", false] # ADK controls advertisement.
-        - ["bt.keep_enabled", true]
-        - ["device.id", "ShellyT32-????"]
-        - ["shelly.name", "ShellyT32-????"]
-        - ["wifi.ap.ssid", "ShellyT32-??????"]
-        - ["sw1", "sw", {"title": "SW settings"}]
-        - ["sw1.name", "SWT32"]
-        - ["sw1.in_mode", 0]
+        - ["device.id", "ShellyRGBW2-????"]
+        - ["shelly.name", "ShellyRGBW2-????"]
+        - ["file_logger.dir", "./"]
+        - ["shelly.mode", 3]
+        - ["lb1", "lb", {title: "Light 1 settings"}]
+        - ["lb2", "lb", {title: "Light 2 settings"}]
+        - ["lb2.initial_state", 2] #input only available to lb1
+        - ["lb3", "lb", {title: "Light 3 settings"}]
+        - ["lb3.initial_state", 2] #input only available to lb1
+        - ["lb4", "lb", {title: "Light 4 settings"}]
+        - ["lb4.initial_state", 2] #input only available to lb1
         - ["in1", "in", {title: "Input 1 settings"}]
-        - ["in1.ssw.name", "SSWT32"]
-        - ["in1.sensor.name", "ST32"]
+        - ["in1.ssw.name", "Shelly SSW1"]
+        - ["in1.sensor.name", "Shelly S1"]
 
 manifest_version: 2020-01-29

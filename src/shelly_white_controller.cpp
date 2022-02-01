@@ -15,31 +15,27 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include "shelly_common.hpp"
+#include "shelly_white_controller.hpp"
 
 namespace shelly {
 
-class TempSensor {
- public:
-  typedef std::function<void()> Notifier;
+WhiteController::WhiteController(struct mgos_config_lb *cfg, Output *out_w)
+    : LightBulbController<StateW>(cfg), out_w_(out_w) {
+}
 
-  TempSensor();
-  virtual ~TempSensor();
-  TempSensor(const TempSensor &other) = delete;
+WhiteController::~WhiteController() {
+}
 
-  virtual Status Init() = 0;
+StateW WhiteController::ConfigToState() {
+  return {.w = cfg_->brightness / 100.0f};
+}
 
-  virtual StatusOr<float> GetTemperature() = 0;
+void WhiteController::ReportTransition(const StateW &next, const StateW &prev) {
+  LOG(LL_INFO, ("Output 1: %.2f => %.2f", prev.w, next.w));
+}
 
-  virtual void StartUpdating(int interval UNUSED_ARG) {
-  }
-
-  void SetNotifier(Notifier notifier);
-
- protected:
-  Notifier notifier_;
-};
+void WhiteController::UpdatePWM(const StateW &state) {
+  out_w_->SetStatePWM(state.w, "transition");
+}
 
 }  // namespace shelly

@@ -48,6 +48,7 @@
 #include "shelly_hap_lock.hpp"
 #include "shelly_hap_outlet.hpp"
 #include "shelly_hap_switch.hpp"
+#include "shelly_hap_temperature_sensor.hpp"
 #include "shelly_hap_valve.hpp"
 #include "shelly_hap_sensor.hpp"
 #include "shelly_input.hpp"
@@ -61,19 +62,11 @@
 #include "shelly_temp_sensor.hpp"
 #include "shelly_wifi_config.hpp"
 
-#define NUM_SESSIONS 12
 #define SCRATCH_BUF_SIZE 1536
-
-#ifndef LED_ON
-#define LED_ON 0
-#endif
-#ifndef BTN_DOWN
-#define BTN_DOWN 0
-#endif
 
 namespace shelly {
 
-static HAPIPSession sessions[NUM_SESSIONS];
+static HAPIPSession sessions[MAX_NUM_HAP_SESSIONS];
 static uint8_t scratch_buf[SCRATCH_BUF_SIZE];
 static HAPIPAccessoryServerStorage s_ip_storage = {
     .sessions = sessions,
@@ -121,13 +114,14 @@ static HAPAccessoryServerRef s_server;
 static Input *s_btn = nullptr;
 static uint8_t s_service_flags = 0;
 static uint8_t s_identify_count = 0;
+static int8_t s_led_gpio = LED_GPIO;
 
 static void CheckLED(int pin, bool led_act);
 
 HAPError AccessoryIdentifyCB(const HAPAccessoryIdentifyRequest *request) {
   LOG(LL_INFO, ("=== IDENTIFY ==="));
   s_identify_count = 3;
-  CheckLED(LED_GPIO, LED_ON);
+  CheckLED(s_led_gpio, LED_ON);
   (void) request;
   return kHAPError_None;
 }
@@ -172,7 +166,7 @@ static void DoReset(void *arg) {
   if (mgos_sys_config_save(&mgos_sys_config, false, nullptr)) {
     remove(AUTH_FILE_NAME);
   }
-  CheckLED(LED_GPIO, LED_ON);
+  CheckLED(s_led_gpio, LED_ON);
 }
 
 void HandleInputResetSequence(Input *in, int out_gpio, Input::Event ev,
@@ -270,14 +264,14 @@ void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
                      HAPAccessoryServerRef *svr, bool to_pri_acc) {
   std::unique_ptr<hap::Sensor> sensor;
   struct mgos_config_se *cfg = (struct mgos_config_se *) s_cfg;
-  uint64_t aid = SHELLY_HAP_AID_BASE_SENSOR;
+  uint64_t aid = SHELLY_HAP_AID_BASE_TEMPERATURE_SENSOR;
   
   std::unique_ptr<mgos::hap::Accessory> acc(
     new mgos::hap::Accessory(aid, kHAPAccessoryCategory_BridgedAccessory,
                                  s_cfg->name, &AccessoryIdentifyCB, svr));
   acc->AddHAPService(&mgos_hap_accessory_information_service);
 
-  aid = SHELLY_HAP_AID_BASE_SENSOR + id;
+  aid = SHELLY_HAP_AID_BASE_TEMPERATURE_SENSOR + id;
   sensor.reset(new hap::Sensor(id, cfg));
      
   auto st = sensor->Init(&acc);
@@ -288,6 +282,29 @@ void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
   }
   comps->push_back(std::move(sensor));
   accs->push_back(std::move(acc));
+}
+
+void CreateHAPTemperatureSensor(
+    int id, std::unique_ptr<TempSensor> sensor,
+    const struct mgos_config_ts *ts_cfg,
+    std::vector<std::unique_ptr<Component>> *comps,
+    std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
+    HAPAccessoryServerRef *svr) {
+  struct mgos_config_ts *cfg = (struct mgos_config_ts *) ts_cfg;
+  std::unique_ptr<hap::TemperatureSensor> ts(
+      new hap::TemperatureSensor(id, std::move(sensor), cfg));
+  if (ts == nullptr || !ts->Init().ok()) {
+    return;
+  }
+
+  std::unique_ptr<mgos::hap::Accessory> acc(
+      new mgos::hap::Accessory(SHELLY_HAP_AID_BASE_TEMPERATURE_SENSOR + id,
+                               kHAPAccessoryCategory_BridgedAccessory,
+                               ts_cfg->name, &AccessoryIdentifyCB, svr));
+  acc->AddHAPService(&mgos_hap_accessory_information_service);
+  acc->AddService(ts.get());
+  accs->push_back(std::move(acc));
+  comps->push_back(std::move(ts));
 }
 
 static void DisableLegacyHAPLayout() {
@@ -482,6 +499,10 @@ static void CheckOverheat(int sys_temp) {
   }
 }
 
+void SetSysLEDEnable(bool enable) {
+  s_led_gpio = (enable ? LED_GPIO : -1);
+}
+
 StatusOr<int> GetSystemTemperature() {
   if (s_sys_temp_sensor == nullptr) return mgos::Status(STATUS_NOT_FOUND, "");
   auto st = s_sys_temp_sensor->GetTemperature();
@@ -519,7 +540,7 @@ static void StatusTimerCB(void *arg) {
   }
   /* If provisioning information has been provided, start the server. */
   StartService(true /* quiet */);
-  CheckLED(LED_GPIO, LED_ON);
+  CheckLED(s_led_gpio, LED_ON);
   if (sys_temp.ok()) {
     CheckOverheat(sys_temp.ValueOrDie());
   }
@@ -564,7 +585,7 @@ static void StatusTimerCB(void *arg) {
                   (unsigned) tcpm_stats.numActiveTCPStreams,
                   (unsigned) tcpm_stats.maxNumTCPStreams, num_sessions,
                   (unsigned long) mgos_get_free_heap_size(),
-                  (unsigned long) mgos_get_heap_size(),
+                  (unsigned long) mgos_get_min_free_heap_size(),
                   (sys_temp.ok() ? sys_temp.ValueOrDie() : 0), status.c_str()));
   }
 #ifdef MGOS_SYS_CONFIG_HAVE_SHELLY_WIFI_CONNECT_REBOOT_TIMEOUT
@@ -718,7 +739,7 @@ void RestartService() {
 static void ButtonHandler(Input::Event ev, bool cur_state) {
   switch (ev) {
     case Input::Event::kChange: {
-      CheckLED(LED_GPIO, LED_ON);
+      CheckLED(s_led_gpio, LED_ON);
       break;
     }
     // Single press will toggle the switch, or cycle if there are two.
@@ -742,7 +763,7 @@ static void ButtonHandler(Input::Event ev, bool cur_state) {
       break;
     }
     case Input::Event::kLong: {
-      HandleInputResetSequence(s_btn, LED_GPIO, Input::Event::kReset,
+      HandleInputResetSequence(s_btn, s_led_gpio, Input::Event::kReset,
                                cur_state);
       break;
     }
@@ -851,9 +872,9 @@ void InitApp() {
   if (IsFailsafeMode()) {
     LOG(LL_INFO, ("== Failsafe mode, not initializing the app"));
     RPCServiceInit(nullptr, nullptr, nullptr);
-#if LED_GPIO >= 0
-    mgos_gpio_setup_output(LED_GPIO, LED_ON);
-#endif
+    if (s_led_gpio >= 0) {
+      mgos_gpio_setup_output(LED_GPIO, LED_ON);
+    }
     return;
   }
 
@@ -870,7 +891,7 @@ void InitApp() {
   // TCP Stream Manager.
   static const HAPPlatformTCPStreamManagerOptions tcpm_opts = {
       .port = kHAPNetworkPort_Any,
-      .maxConcurrentTCPStreams = NUM_SESSIONS,
+      .maxConcurrentTCPStreams = MAX_NUM_HAP_SESSIONS,
   };
   HAPPlatformTCPStreamManagerCreate(&s_tcpm, &tcpm_opts);
 
@@ -959,6 +980,12 @@ void InitApp() {
 
   LOG(LL_INFO, ("=== Creating peripherals"));
   CreatePeripherals(&s_inputs, &s_outputs, &s_pms, &s_sys_temp_sensor);
+  if (s_sys_temp_sensor) {
+    Status st = s_sys_temp_sensor->Init();
+    if (!st.ok()) {
+      LOG(LL_ERROR, ("Sys temp sensor init failed: %s", st.ToString().c_str()));
+    }
+  }
 
   StartService(false /* quiet */);
 

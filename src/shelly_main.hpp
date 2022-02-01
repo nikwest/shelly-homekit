@@ -56,6 +56,13 @@ void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
                      std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
                      HAPAccessoryServerRef *svr, bool to_pri_acc);
                      
+void CreateHAPTemperatureSensor(
+    int id, std::unique_ptr<TempSensor> sensor,
+    const struct mgos_config_ts *ts_cfg,
+    std::vector<std::unique_ptr<Component>> *comps,
+    std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
+    HAPAccessoryServerRef *svr);
+
 void HandleInputResetSequence(Input *in, int out_gpio, Input::Event ev,
                               bool cur_state);
 
@@ -75,6 +82,8 @@ void SetServiceFlags(uint8_t flags);
 void ClearServiceFlags(uint8_t flags);
 
 HAPError AccessoryIdentifyCB(const HAPAccessoryIdentifyRequest *request);
+
+void SetSysLEDEnable(bool enable);
 
 // Implemented for each model.
 

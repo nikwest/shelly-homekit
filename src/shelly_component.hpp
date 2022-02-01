@@ -23,6 +23,7 @@ namespace shelly {
 
 class Component {
  public:
+  // NB: Keep in sync with Component_Type in JS.
   enum class Type {
     kSwitch = 0,
     kOutlet = 1,
@@ -36,7 +37,7 @@ class Component {
     kContactSensor = 9,
     kDoorbell = 10,
     kLightBulb = 11,
-    kSensor = 12,
+    kTemperatureSensor = 12,
     kMax,
   };
 
