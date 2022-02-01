@@ -56,6 +56,10 @@ BME680Sensor::~BME680Sensor() {
   mgos_event_remove_handler(MGOS_EV_BME680_BSEC_OUTPUT, bme680_output_cb, this);
 }
 
+Status BME680Sensor::Init() {
+  return Status::OK();
+}
+
 StatusOr<float> BME680Sensor::GetTemperature() {
   if (out_.temp.time_stamp == 0) {
     return Status(-1, "Cannot read temperature from bme680 sensor") ;
@@ -117,20 +121,20 @@ StatusOr<float> BME680Sensor::GetVOCLevel() {
 }
 
 void BME680Sensor::Notify() {
-  if(TempSensor::notify_ != nullptr) {
-    TempSensor::notify_();
+  if(TempSensor::notifier_ != nullptr) {
+    TempSensor::notifier_();
   }
-  if(HumiditySensor::notify_ != nullptr) {
-    HumiditySensor::notify_();
+  if(HumiditySensor::notifier_ != nullptr) {
+    HumiditySensor::notifier_();
   }
-  if(PressureSensor::notify_ != nullptr) {
-    PressureSensor::notify_();
+  if(PressureSensor::notifier_ != nullptr) {
+    PressureSensor::notifier_();
   }
-  if(AirQualitySensor::notify_ != nullptr) {
-    AirQualitySensor::notify_();
+  if(AirQualitySensor::notifier_ != nullptr) {
+    AirQualitySensor::notifier_();
   }
-  if(CO2Sensor::notify_ != nullptr) {
-    CO2Sensor::notify_();
+  if(CO2Sensor::notifier_ != nullptr) {
+    CO2Sensor::notifier_();
   }
 }
 
