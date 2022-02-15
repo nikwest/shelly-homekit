@@ -770,12 +770,12 @@ function updateComponent(cd) {
       if (cd.value !== undefined) {
         v = (cd.unit == 1 ? cel2far(cd.value) : cd.value);
         el(c, "unit").style.display = "inline";
+        selectIfNotModified(el(c, "unit"), cd.unit);
       } else {
         v = cd.error;
         el(c, "unit").style.display = "none";
       }
       updateInnerText(el(c, "value"), v);
-      selectIfNotModified(el(c, "unit"), cd.unit);
       updateInnerText(el(c, "hvalue"), cd.hvalue);
       updateInnerText(el(c, "pvalue"), cd.pvalue);
       updateInnerText(el(c, "co2value"), cd.co2value);
@@ -1562,6 +1562,7 @@ function resetLastSetValue() {
 }
 
 function updateInnerText(e, newInnerText) {
+  if(newInnerText == undefined) return;
   newInnerText = newInnerText.toString();
   if (e.innerText === newInnerText) return;
   e.innerText = newInnerText;

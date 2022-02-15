@@ -34,19 +34,19 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
   // outputs->emplace_back(new OutputPin(2, 13, 1));
   // outputs->emplace_back(new OutputPin(3, 2, 1));
   // outputs->emplace_back(new OutputPin(4, 0, 1));
-  auto *in1 = new InputPin(1, 15, 1, MGOS_GPIO_PULL_NONE, false);
+  auto *in1 = new InputPin(1, 14, 1, MGOS_GPIO_PULL_NONE, false);
   //in1->AddHandler(std::bind(&HandleInputResetSequence, in1, 4, _1, _2));
   in1->Init();
   inputs->emplace_back(in1);
-  auto *in2 = new InputPin(2, 12, 1, MGOS_GPIO_PULL_NONE, false);
-  in2->Init();
-  inputs->emplace_back(in2);
-  auto *in3 = new InputPin(3, 14, 1, MGOS_GPIO_PULL_NONE, false);
-  in3->Init();
-  inputs->emplace_back(in3);
-  auto *in4 = new InputPin(4, 27, 1, MGOS_GPIO_PULL_NONE, false);
-  in4->Init();
-  inputs->emplace_back(in4);
+  // auto *in2 = new InputPin(2, 12, 1, MGOS_GPIO_PULL_NONE, false);
+  // in2->Init();
+  // inputs->emplace_back(in2);
+  // auto *in3 = new InputPin(3, 14, 1, MGOS_GPIO_PULL_NONE, false);
+  // in3->Init();
+  // inputs->emplace_back(in3);
+  // auto *in4 = new InputPin(4, 27, 1, MGOS_GPIO_PULL_NONE, false);
+  // in4->Init();
+  // inputs->emplace_back(in4);
 
   (void) pms;
 }
@@ -56,9 +56,9 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
                       HAPAccessoryServerRef *svr) {
   
   hap::CreateHAPInput(1, mgos_sys_config_get_in1(), comps, accs, svr);
-  hap::CreateHAPInput(2, mgos_sys_config_get_in2(), comps, accs, svr);
-  hap::CreateHAPInput(3, mgos_sys_config_get_in3(), comps, accs, svr);
-  hap::CreateHAPInput(4, mgos_sys_config_get_in4(), comps, accs, svr);
+  // hap::CreateHAPInput(2, mgos_sys_config_get_in2(), comps, accs, svr);
+  // hap::CreateHAPInput(3, mgos_sys_config_get_in3(), comps, accs, svr);
+  // hap::CreateHAPInput(4, mgos_sys_config_get_in4(), comps, accs, svr);
 
   // CreateHAPSwitch(1, mgos_sys_config_get_sw1(), mgos_sys_config_get_in1(),
   //                 comps, accs, svr, false /* to_pri_acc */);
@@ -69,7 +69,7 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
   // CreateHAPSwitch(4, mgos_sys_config_get_sw4(), mgos_sys_config_get_in4(),
   //                 comps, accs, svr, false /* to_pri_acc */);
 
- CreateHAPSensor(5, mgos_sys_config_get_se1(),
+ CreateHAPSensor(2, mgos_sys_config_get_se1(),
                 comps, accs, svr, true /* to_pri_acc */);
  
 }

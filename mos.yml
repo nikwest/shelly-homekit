@@ -816,6 +816,8 @@ conds:
 
   - when: build_vars.SENSOR == "BMP280"
     apply:
+      sources:
+        - src/BMX280
       libs:
         - location: https://github.com/mongoose-os-libs/bme280
       cdefs:
@@ -827,6 +829,8 @@ conds:
 
   - when: build_vars.SENSOR == "BME280"
     apply:
+      sources:
+        - src/BMX280
       libs:
         - location: https://github.com/mongoose-os-libs/bme280
       cdefs:
@@ -885,12 +889,12 @@ conds:
 
   - when: build_vars.MODEL == "Custom2"
     apply:
-      platform: esp32
+ #     platform: esp32
       name: switch
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
-          variant: esp32-nossl
- #         variant: esp8266-nossl
+#          variant: esp32-nossl
+          variant: esp8266-nossl
  #       - location: https://github.com/mongoose-os-libs/dash # optional
       # build_vars:
       #   FLASH_SIZE: 2097152  #esp 8266:  4194304

@@ -94,7 +94,7 @@ ShellyT32: PLATFORM=esp32
 ShellyT32: build-ShellyT32
 	@true
 
-Custom2: PLATFORM=esp32
+#Custom2: PLATFORM=esp32
 Custom2: build-Custom2
 	@true
 
