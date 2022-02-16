@@ -11,6 +11,7 @@ class HTU21DFSensor : public TempSensor, public HumiditySensor {
  public:
   HTU21DFSensor(int bus_num, uint8_t i2caddr);
   virtual ~HTU21DFSensor();
+  Status Init() override;
 
   StatusOr<float> GetTemperature() override;
   StatusOr<float> GetHumidity() override;
