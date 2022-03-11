@@ -6,7 +6,7 @@ MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 
 MOS ?= mos
 # Build locally by default if Docker is available.
-LOCAL ?= 0 #$(shell which docker> /dev/null && echo 1 || echo 0)
+LOCAL ?= $(shell which docker> /dev/null && echo 1 || echo 0)
 CLEAN ?= 0
 V ?= 0
 VERBOSE ?= 0

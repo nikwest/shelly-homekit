@@ -26,6 +26,10 @@
 #include "mgos_ota.h"
 #include "mgos_rpc.h"
 
+#if MGOS_HAVE_PROMETHEUS_METRICS
+#include "mgos_dns_sd.h"
+#endif
+
 #include "mongoose.h"
 
 #if CS_PLATFORM == CS_P_ESP8266
@@ -1010,7 +1014,17 @@ void InitApp() {
 
   OTAInit(&s_server);
 
+#if MGOS_HAVE_PROMETHEUS_METRICS
+  const struct mgos_dns_sd_txt_entry prometheus_txt[] = {
+    {.key = "path", .value = MG_MK_STR("/metrics")},
+    {.key = "name", .value = mg_mk_str(mgos_sys_config_get_shelly_name())},
+    {.key = NULL},
+};
+  mgos_dns_sd_add_service_instance(mgos_sys_config_get_dns_sd_host_name(), "_prometheus-http._tcp", 80, prometheus_txt);
+#endif // MGOS_HAVE_PROMETHEUS_METRICS
+
   (void) s_ip_storage;
+
 }
 
 }  // namespace shelly

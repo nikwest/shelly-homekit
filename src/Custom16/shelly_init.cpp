@@ -21,7 +21,10 @@
 #include "shelly_input_pin.hpp"
 //#include "shelly_sensor_sht3x.hpp"
 //#include "shelly_sensor_htu21df.hpp"
+#ifdef HAVE_BMX280
 #include "shelly_sensor_bmx280.hpp"
+#endif
+
 #include "shelly_main.hpp"
 #include "custom16_pcf857x_output.hpp"
 #include "custom16_pcf857x_input.hpp"
