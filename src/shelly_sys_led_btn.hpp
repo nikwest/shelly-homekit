@@ -15,26 +15,12 @@
  * limitations under the License.
  */
 
-#include "shelly_component.hpp"
+#pragma once
 
 namespace shelly {
 
-Component::Component(int id) : id_(id) {
-}
-
-Component::~Component() {
-}
-
-int Component::id() const {
-  return id_;
-}
-
-void Component::Identify() {
-  LOG(LL_INFO, ("== Identify %d %d %s", id(), (int) type(), name().c_str()));
-}
-
-bool Component::IsIdle() {
-  return true;
-}
+void InitSysLED(int gpio, bool active_high);
+void CheckSysLED();
+void InitSysBtn(int pin, bool on_value);
 
 }  // namespace shelly
