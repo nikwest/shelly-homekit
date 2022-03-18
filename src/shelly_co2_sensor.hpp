@@ -23,13 +23,21 @@ namespace shelly {
 
 class CO2Sensor {
  public:
+  typedef std::function<void()> Notifier;
+
   CO2Sensor();
   virtual ~CO2Sensor();
   CO2Sensor(const CO2Sensor &other) = delete;
 
   virtual StatusOr<float> GetCO2Level() = 0;
 
-  std::function<void()> notify_;
+ virtual void StartUpdating(int interval UNUSED_ARG) {
+  }
+
+  void SetNotifier(Notifier notifier);
+
+ protected:
+  Notifier notifier_;
 };
 
 }  // namespace shelly

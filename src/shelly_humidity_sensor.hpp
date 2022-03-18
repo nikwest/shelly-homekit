@@ -23,13 +23,21 @@ namespace shelly {
 
 class HumiditySensor {
  public:
+  typedef std::function<void()> Notifier;
+
   HumiditySensor();
   virtual ~HumiditySensor();
   HumiditySensor(const HumiditySensor &other) = delete;
 
   virtual StatusOr<float> GetHumidity() = 0;
 
-  std::function<void()> notify_;
+  virtual void StartUpdating(int interval UNUSED_ARG) {
+  }
+
+  void SetNotifier(Notifier notifier);
+
+ protected:
+  Notifier notifier_;
 };
 
 }  // namespace shelly

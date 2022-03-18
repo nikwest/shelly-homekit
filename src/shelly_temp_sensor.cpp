@@ -47,4 +47,8 @@ TempSensor::TempSensor() {
 TempSensor::~TempSensor() {
 }
 
+void TempSensor::SetNotifier(Notifier notifier) {
+  notifier_ = notifier;
+}
+
 }  // namespace shelly

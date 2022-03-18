@@ -18,6 +18,8 @@ class BME680Sensor : public TempSensor, public PressureSensor, public HumiditySe
     BME680Sensor();
     virtual ~BME680Sensor();
 
+    Status Init() override;
+
     StatusOr<float> GetTemperature() override;
     StatusOr<float> GetPressure() override;
     StatusOr<float> GetHumidity() override;

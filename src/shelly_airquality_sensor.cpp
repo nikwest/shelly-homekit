@@ -54,4 +54,9 @@ AirQualitySensor::AirQualitySensor() {
 AirQualitySensor::~AirQualitySensor() {
 }
 
+void AirQualitySensor::SetNotifier(Notifier notifier) {
+  notifier_ = notifier;
+}
+
+
 }  // namespace shelly

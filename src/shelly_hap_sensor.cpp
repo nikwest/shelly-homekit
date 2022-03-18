@@ -39,7 +39,7 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
 
   const int id1 = id() - 1;  // IDs used to start at 0, preserve compat.
   uint16_t iid =
-      SHELLY_HAP_IID_BASE_SENSOR + (SHELLY_HAP_IID_STEP_SENSOR * id1);
+      SHELLY_HAP_IID_BASE_TEMPERATURE_SENSOR + (SHELLY_HAP_IID_STEP_SENSOR * id1);
   if(temp_) {
     auto* s(
       new mgos::hap::Service(iid++, &kHAPServiceType_TemperatureSensor, kHAPServiceDebugDescription_TemperatureSensor)
@@ -59,11 +59,11 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
       true /* supports_notification */, nullptr /* write_handler */,
       kHAPCharacteristicDebugDescription_CurrentTemperature);
     s->AddChar(c);
-    temp_->notify_= [c]{
+    temp_->SetNotifier( [c]{
       if(c != nullptr) {
         c->RaiseEvent();
       } 
-    };
+    });
     acc->get()->AddService(s);
   }
   if(humidity_) {
@@ -85,11 +85,11 @@ Status Sensor::Init(std::unique_ptr<mgos::hap::Accessory> *acc) {
       true /* supports_notification */, nullptr /* write_handler */,
       kHAPCharacteristicDebugDescription_CurrentRelativeHumidity);
     s->AddChar(c);
-    humidity_->notify_= [c]{
+    humidity_->SetNotifier( [c]{
       if(c != nullptr) {
         c->RaiseEvent();
       } 
-    };
+    });
     acc->get()->AddService(s);
   }
  
@@ -112,11 +112,11 @@ if(pressure_) {
       true /* supports_notification */, nullptr /* write_handler */,
       "eve-atmospheric-pressure");
     s->AddChar(c);
-    pressure_->notify_= [c]{
+    pressure_->SetNotifier( [c]{
       if(c != nullptr) {
         c->RaiseEvent();
       } 
-    };
+    });
     acc->get()->AddService(s);
   }
  
@@ -152,14 +152,14 @@ if(pressure_) {
       true /* supports_notification */, nullptr /* write_handler */,
       kHAPCharacteristicDebugDescription_VOCDensity);
     s->AddChar(c2);
-    air_->notify_= [c, c2]{
+    air_->SetNotifier( [c, c2]{
       if(c != nullptr) {
         c->RaiseEvent();
       } 
       if(c2 != nullptr) {
         c2->RaiseEvent();
       } 
-    };
+    });
 
     if(co2_) {
       auto* c = new mgos::hap::FloatCharacteristic(
@@ -176,11 +176,11 @@ if(pressure_) {
         kHAPCharacteristicDebugDescription_CarbonDioxideLevel);
       s->AddChar(c);
     }
-        co2_->notify_= [c]{
+        co2_->SetNotifier( [c]{
       if(c != nullptr) {
         c->RaiseEvent();
       } 
-    };
+    });
     acc->get()->AddService(s);
   } else if(co2_) {
     auto* s(

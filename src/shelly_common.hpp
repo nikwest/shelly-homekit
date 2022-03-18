@@ -38,7 +38,9 @@
 #define SHELLY_HAP_AID_BASE_VALVE 0x900
 #define SHELLY_HAP_AID_BASE_DOORBELL 0xa00
 #define SHELLY_HAP_AID_BASE_LIGHTING 0xb00
-#define SHELLY_HAP_AID_BASE_SENSOR 0xc00
+#define SHELLY_HAP_AID_BASE_TEMPERATURE_SENSOR 0xc00
+#define SHELLY_HAP_AID_BASE_LEAK_SENSOR 0xe00
+#define SHELLY_HAP_AID_BASE_SMOKE_SENSOR 0xf00
 
 #define SHELLY_HAP_IID_BASE_SWITCH 0x100
 #define SHELLY_HAP_IID_STEP_SWITCH 4
@@ -61,8 +63,9 @@
 #define SHELLY_HAP_IID_BASE_DOORBELL 0xb00
 #define SHELLY_HAP_IID_BASE_LIGHTING 0xc00
 #define SHELLY_HAP_IID_STEP_LIGHTING 0x10
-#define SHELLY_HAP_IID_BASE_SENSOR 0xd00
- 
+#define SHELLY_HAP_IID_BASE_TEMPERATURE_SENSOR 0xd00
+#define SHELLY_HAP_IID_BASE_LEAK_SENSOR 0xe00
+#define SHELLY_HAP_IID_BASE_SMOKE_SENSOR 0xf00
 
 namespace shelly {
 
@@ -107,6 +110,18 @@ enum class InitialState {
   kOn = 1,
   kLast = 2,
   kInput = 3,
+  kMax,
+};
+
+enum class Mode {
+  kDefault = 0,
+  kRollerShutter = 1,
+  kGarageDoor = 2,
+  kRGB = 3,
+  kRGBW = 4,
+  kRGBpW = 5,
+  kCCT = 6,
+  kWhite = 7,
   kMax,
 };
 

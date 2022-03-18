@@ -23,6 +23,8 @@ namespace shelly {
 
 class AirQualitySensor {
  public:
+  typedef std::function<void()> Notifier;
+
   AirQualitySensor();
   virtual ~AirQualitySensor();
   AirQualitySensor(const AirQualitySensor &other) = delete;
@@ -30,7 +32,13 @@ class AirQualitySensor {
   virtual StatusOr<float> GetVOCLevel() = 0;
   virtual StatusOr<float> GetIAQLevel() = 0;
 
-  std::function<void()> notify_;
+ virtual void StartUpdating(int interval UNUSED_ARG) {
+  }
+
+  void SetNotifier(Notifier notifier);
+
+ protected:
+  Notifier notifier_;
 };
 
 }  // namespace shelly

@@ -23,13 +23,21 @@ namespace shelly {
 
 class PressureSensor {
  public:
+  typedef std::function<void()> Notifier;
+
   PressureSensor();
   virtual ~PressureSensor();
   PressureSensor(const PressureSensor &other) = delete;
 
   virtual StatusOr<float> GetPressure() = 0;
 
-    std::function<void()> notify_;
+  virtual void StartUpdating(int interval UNUSED_ARG) {
+  }
+
+  void SetNotifier(Notifier notifier);
+
+ protected:
+  Notifier notifier_;
 };
 
 }  // namespace shelly

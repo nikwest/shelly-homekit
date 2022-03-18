@@ -26,6 +26,10 @@
 #include "mgos_ota.h"
 #include "mgos_rpc.h"
 
+#if MGOS_HAVE_PROMETHEUS_METRICS
+#include "mgos_dns_sd.h"
+#endif
+
 #include "mongoose.h"
 
 #if CS_PLATFORM == CS_P_ESP8266
@@ -48,11 +52,13 @@
 #include "shelly_hap_lock.hpp"
 #include "shelly_hap_outlet.hpp"
 #include "shelly_hap_switch.hpp"
+#include "shelly_hap_temperature_sensor.hpp"
 #include "shelly_hap_valve.hpp"
 #include "shelly_hap_sensor.hpp"
 #include "shelly_input.hpp"
 #include "shelly_input_pin.hpp"
 #include "shelly_noisy_input_pin.hpp"
+#include "shelly_ota.hpp"
 #include "shelly_output.hpp"
 #include "shelly_rpc_service.hpp"
 #include "shelly_switch.hpp"
@@ -60,19 +66,11 @@
 #include "shelly_temp_sensor.hpp"
 #include "shelly_wifi_config.hpp"
 
-#define NUM_SESSIONS 12
 #define SCRATCH_BUF_SIZE 1536
-
-#ifndef LED_ON
-#define LED_ON 0
-#endif
-#ifndef BTN_DOWN
-#define BTN_DOWN 0
-#endif
 
 namespace shelly {
 
-static HAPIPSession sessions[NUM_SESSIONS];
+static HAPIPSession sessions[MAX_NUM_HAP_SESSIONS];
 static uint8_t scratch_buf[SCRATCH_BUF_SIZE];
 static HAPIPAccessoryServerStorage s_ip_storage = {
     .sessions = sessions,
@@ -120,13 +118,14 @@ static HAPAccessoryServerRef s_server;
 static Input *s_btn = nullptr;
 static uint8_t s_service_flags = 0;
 static uint8_t s_identify_count = 0;
+static int8_t s_led_gpio = LED_GPIO;
 
 static void CheckLED(int pin, bool led_act);
 
 HAPError AccessoryIdentifyCB(const HAPAccessoryIdentifyRequest *request) {
   LOG(LL_INFO, ("=== IDENTIFY ==="));
   s_identify_count = 3;
-  CheckLED(LED_GPIO, LED_ON);
+  CheckLED(s_led_gpio, LED_ON);
   (void) request;
   return kHAPError_None;
 }
@@ -171,7 +170,7 @@ static void DoReset(void *arg) {
   if (mgos_sys_config_save(&mgos_sys_config, false, nullptr)) {
     remove(AUTH_FILE_NAME);
   }
-  CheckLED(LED_GPIO, LED_ON);
+  CheckLED(s_led_gpio, LED_ON);
 }
 
 void HandleInputResetSequence(Input *in, int out_gpio, Input::Event ev,
@@ -269,14 +268,14 @@ void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
                      HAPAccessoryServerRef *svr, bool to_pri_acc) {
   std::unique_ptr<hap::Sensor> sensor;
   struct mgos_config_se *cfg = (struct mgos_config_se *) s_cfg;
-  uint64_t aid = SHELLY_HAP_AID_BASE_SENSOR;
+  uint64_t aid = SHELLY_HAP_AID_BASE_TEMPERATURE_SENSOR;
   
   std::unique_ptr<mgos::hap::Accessory> acc(
     new mgos::hap::Accessory(aid, kHAPAccessoryCategory_BridgedAccessory,
                                  s_cfg->name, &AccessoryIdentifyCB, svr));
   acc->AddHAPService(&mgos_hap_accessory_information_service);
 
-  aid = SHELLY_HAP_AID_BASE_SENSOR + id;
+  aid = SHELLY_HAP_AID_BASE_TEMPERATURE_SENSOR + id;
   sensor.reset(new hap::Sensor(id, cfg));
      
   auto st = sensor->Init(&acc);
@@ -287,6 +286,29 @@ void CreateHAPSensor(int id, const struct mgos_config_se *s_cfg,
   }
   comps->push_back(std::move(sensor));
   accs->push_back(std::move(acc));
+}
+
+void CreateHAPTemperatureSensor(
+    int id, std::unique_ptr<TempSensor> sensor,
+    const struct mgos_config_ts *ts_cfg,
+    std::vector<std::unique_ptr<Component>> *comps,
+    std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
+    HAPAccessoryServerRef *svr) {
+  struct mgos_config_ts *cfg = (struct mgos_config_ts *) ts_cfg;
+  std::unique_ptr<hap::TemperatureSensor> ts(
+      new hap::TemperatureSensor(id, std::move(sensor), cfg));
+  if (ts == nullptr || !ts->Init().ok()) {
+    return;
+  }
+
+  std::unique_ptr<mgos::hap::Accessory> acc(
+      new mgos::hap::Accessory(SHELLY_HAP_AID_BASE_TEMPERATURE_SENSOR + id,
+                               kHAPAccessoryCategory_BridgedAccessory,
+                               ts_cfg->name, &AccessoryIdentifyCB, svr));
+  acc->AddHAPService(&mgos_hap_accessory_information_service);
+  acc->AddService(ts.get());
+  accs->push_back(std::move(acc));
+  comps->push_back(std::move(ts));
 }
 
 static void DisableLegacyHAPLayout() {
@@ -481,6 +503,10 @@ static void CheckOverheat(int sys_temp) {
   }
 }
 
+void SetSysLEDEnable(bool enable) {
+  s_led_gpio = (enable ? LED_GPIO : -1);
+}
+
 StatusOr<int> GetSystemTemperature() {
   if (s_sys_temp_sensor == nullptr) return mgos::Status(STATUS_NOT_FOUND, "");
   auto st = s_sys_temp_sensor->GetTemperature();
@@ -492,7 +518,15 @@ uint8_t GetServiceFlags() {
   return s_service_flags;
 }
 
-static bool AllComponentsIdle() {
+void SetServiceFlags(uint8_t flags) {
+  s_service_flags |= flags;
+}
+
+void ClearServiceFlags(uint8_t flags) {
+  s_service_flags &= ~flags;
+}
+
+bool AllComponentsIdle() {
   for (const auto &c : g_comps) {
     if (!c->IsIdle()) return false;
   }
@@ -510,7 +544,7 @@ static void StatusTimerCB(void *arg) {
   }
   /* If provisioning information has been provided, start the server. */
   StartService(true /* quiet */);
-  CheckLED(LED_GPIO, LED_ON);
+  CheckLED(s_led_gpio, LED_ON);
   if (sys_temp.ok()) {
     CheckOverheat(sys_temp.ValueOrDie());
   }
@@ -555,7 +589,7 @@ static void StatusTimerCB(void *arg) {
                   (unsigned) tcpm_stats.numActiveTCPStreams,
                   (unsigned) tcpm_stats.maxNumTCPStreams, num_sessions,
                   (unsigned long) mgos_get_free_heap_size(),
-                  (unsigned long) mgos_get_heap_size(),
+                  (unsigned long) mgos_get_min_free_heap_size(),
                   (sys_temp.ok() ? sys_temp.ValueOrDie() : 0), status.c_str()));
   }
 #ifdef MGOS_SYS_CONFIG_HAVE_SHELLY_WIFI_CONNECT_REBOOT_TIMEOUT
@@ -592,10 +626,13 @@ bool mgos_sys_config_get_wifi_sta_enable(void) {
 }
 #endif
 
-static bool shelly_cfg_migrate(bool *reboot_required) {
+static bool MigrateConfig(bool *reboot_required) {
   bool changed = false;
   *reboot_required = false;
   if (mgos_sys_config_get_shelly_cfg_version() == 0) {
+    // Very first migration after conversion, reset all settings to defaults
+    // except WiFi.
+    SanitizeSysConfig();
 #ifdef MGOS_CONFIG_HAVE_SW1
     if (mgos_sys_config_get_sw1_persist_state()) {
       mgos_sys_config_set_sw1_initial_state(
@@ -706,7 +743,7 @@ void RestartService() {
 static void ButtonHandler(Input::Event ev, bool cur_state) {
   switch (ev) {
     case Input::Event::kChange: {
-      CheckLED(LED_GPIO, LED_ON);
+      CheckLED(s_led_gpio, LED_ON);
       break;
     }
     // Single press will toggle the switch, or cycle if there are two.
@@ -730,7 +767,7 @@ static void ButtonHandler(Input::Event ev, bool cur_state) {
       break;
     }
     case Input::Event::kLong: {
-      HandleInputResetSequence(s_btn, LED_GPIO, Input::Event::kReset,
+      HandleInputResetSequence(s_btn, s_led_gpio, Input::Event::kReset,
                                cur_state);
       break;
     }
@@ -760,100 +797,6 @@ static void SetupButton(int pin, bool on_value) {
   s_btn->AddHandler(ButtonHandler);
 }
 
-static void OTABeginCB(int ev, void *ev_data, void *userdata) {
-  static double s_wait_start = 0;
-  struct mgos_ota_begin_arg *arg = (struct mgos_ota_begin_arg *) ev_data;
-  // Some other callback objected.
-  if (arg->result != MGOS_UPD_OK) return;
-  // If there is some ongoing activity, wait for it to finish.
-  if (!AllComponentsIdle()) {
-    arg->result = MGOS_UPD_WAIT;
-    return;
-  }
-  // Check app name.
-  if (mg_vcmp(&arg->mi.name, MGOS_APP) != 0) {
-    LOG(LL_ERROR,
-        ("Wrong app name '%.*s'", (int) arg->mi.name.len, arg->mi.name.p));
-    arg->result = MGOS_UPD_ABORT;
-    return;
-  }
-  // Stop the HAP server.
-  if (!(s_service_flags & SHELLY_SERVICE_FLAG_UPDATE)) {
-    s_wait_start = mgos_uptime();
-  }
-  s_service_flags |= SHELLY_SERVICE_FLAG_UPDATE;
-  s_service_flags &= ~SHELLY_SERVICE_FLAG_REVERT;
-  // Are we reverting to stock? Stock fw does not have "hk_model"
-  char *hk_model = nullptr;
-  json_scanf(arg->mi.manifest.p, arg->mi.manifest.len, "{shelly_hk_model: %Q}",
-             &hk_model);
-  mgos::ScopedCPtr hk_model_owner(hk_model);
-  if (hk_model == nullptr) {
-    // hk_model was added in 2.9.1, for now we also check version in the
-    // manifest to double-check: stock has manifest version always set to "1.0"
-    // while HK has actual version there.
-    // This check can be removed after a few versions with hk_model.
-    if (mg_vcmp(&arg->mi.version, "1.0") == 0) {
-      LOG(LL_INFO, ("This is a revert to stock firmware"));
-      s_service_flags |= SHELLY_SERVICE_FLAG_REVERT;
-    }
-  }
-  if (HAPAccessoryServerGetState(&s_server) != kHAPAccessoryServerState_Idle) {
-    // There is a bug in HAP server where it will get stuck and fail to shut
-    // down reported to happen after approximately 25 days. This is a workaround
-    // until it's fixed.
-    if (mgos_uptime() - s_wait_start > 10) {
-      LOG(LL_WARN,
-          ("Server failed to stop, proceeding with the update anyway"));
-    } else {
-      arg->result = MGOS_UPD_WAIT;
-      StopService();
-      return;
-    }
-  }
-  LOG(LL_INFO, ("Starting firmware update"));
-  (void) ev;
-  (void) ev_data;
-  (void) userdata;
-}
-
-static void WipeDeviceRevertToStockCB(void *) {
-  WipeDeviceRevertToStock();
-}
-
-static int8_t s_ota_progress = -1;
-
-int GetOTAProgress() {
-  return s_ota_progress;
-}
-
-static void OTAStatusCB(int ev, void *ev_data, void *userdata) {
-  struct mgos_ota_status *arg = (struct mgos_ota_status *) ev_data;
-  // Restart server in case of error.
-  // In case of success we are going to reboot anyway.
-  if (arg->state == MGOS_OTA_STATE_PROGRESS) {
-    s_ota_progress = arg->progress_percent;
-  } else if (arg->state == MGOS_OTA_STATE_ERROR) {
-    s_ota_progress = -1;
-    s_service_flags &=
-        ~(SHELLY_SERVICE_FLAG_UPDATE | SHELLY_SERVICE_FLAG_REVERT);
-  } else if (arg->state == MGOS_OTA_STATE_SUCCESS) {
-    s_ota_progress = 100;
-#if CS_PLATFORM == CS_P_ESP8266
-    // Disable flash core dump because it would overwite the new fw.
-    esp_core_dump_set_flash_area(0, 0);
-#endif
-    if (s_service_flags & SHELLY_SERVICE_FLAG_REVERT) {
-      // For some reason if WipeDeviceRevertToStock is done inline the client
-      // doesn't get a response to the POST request.
-      mgos_set_timer(100, 0, WipeDeviceRevertToStockCB, nullptr);
-    }
-  }
-  (void) ev;
-  (void) ev_data;
-  (void) userdata;
-}
-
 extern "C" bool mgos_ota_merge_fs_should_copy_file(const char *old_fs_path,
                                                    const char *new_fs_path,
                                                    const char *file_name) {
@@ -864,7 +807,7 @@ extern "C" bool mgos_ota_merge_fs_should_copy_file(const char *old_fs_path,
       "relaydata",
       "index.html",
       "conf9_backup.json",
-      // Obsolete files from previopus versions.
+      // Obsolete files from previous versions.
       "axios.min.js.gz",
       "favicon.ico",
       "logo.png",
@@ -872,6 +815,8 @@ extern "C" bool mgos_ota_merge_fs_should_copy_file(const char *old_fs_path,
       "style.css",
       "style.css.gz",
       // Plus firmware stuff that we don't need.
+      "api_math.js",
+      "api_rpc.js",
       "bundle.css.gz",
       "bundle.js.gz",
       "ca.pem",
@@ -922,7 +867,24 @@ static void HTTPHandler(struct mg_connection *nc, int ev, void *ev_data,
   (void) user_data;
 }
 
+void ResetRebootCounter(void *arg UNUSED_ARG) {
+  LOG(LL_INFO, ("=== ResetRebootCounter"));
+  mgos_sys_config_set_shelly_reboot_counter(0);
+  mgos_sys_config_save(&mgos_sys_config, false /* try_once */, nullptr);
+}
+
 void InitApp() {
+  int reboot_counter = mgos_sys_config_get_shelly_reboot_counter() + 1;
+  LOG(LL_INFO, ("=== reboot_counter %d", reboot_counter));
+  if (reboot_counter >= 5) {
+    LOG(LL_INFO, ("=== DoRebootReset"));
+    ResetRebootCounter(nullptr);
+    DoReset(nullptr);
+  }
+  mgos_sys_config_set_shelly_reboot_counter(reboot_counter);
+  mgos_sys_config_save(&mgos_sys_config, false /* try_once */, nullptr);
+  mgos_set_timer(10000, 0, ResetRebootCounter, nullptr);
+
   struct mg_http_endpoint_opts opts = {};
   mgos_register_http_endpoint_opt("/", HTTPHandler, opts);
   // Support /ota?url=... updates a-la stock.
@@ -930,10 +892,10 @@ void InitApp() {
 
   if (IsFailsafeMode()) {
     LOG(LL_INFO, ("== Failsafe mode, not initializing the app"));
-    shelly_rpc_service_init(nullptr, nullptr, nullptr);
-#if LED_GPIO >= 0
-    mgos_gpio_setup_output(LED_GPIO, LED_ON);
-#endif
+    RPCServiceInit(nullptr, nullptr, nullptr);
+    if (s_led_gpio >= 0) {
+      mgos_gpio_setup_output(LED_GPIO, LED_ON);
+    }
     return;
   }
 
@@ -950,7 +912,7 @@ void InitApp() {
   // TCP Stream Manager.
   static const HAPPlatformTCPStreamManagerOptions tcpm_opts = {
       .port = kHAPNetworkPort_Any,
-      .maxConcurrentTCPStreams = NUM_SESSIONS,
+      .maxConcurrentTCPStreams = MAX_NUM_HAP_SESSIONS,
   };
   HAPPlatformTCPStreamManagerCreate(&s_tcpm, &tcpm_opts);
 
@@ -1027,7 +989,7 @@ void InitApp() {
                            nullptr /* context */);
 
   bool reboot_required = false;
-  if (shelly_cfg_migrate(&reboot_required)) {
+  if (MigrateConfig(&reboot_required)) {
     mgos_sys_config_save(&mgos_sys_config, false /* try_once */,
                          nullptr /* msg */);
     if (reboot_required) {
@@ -1039,6 +1001,12 @@ void InitApp() {
 
   LOG(LL_INFO, ("=== Creating peripherals"));
   CreatePeripherals(&s_inputs, &s_outputs, &s_pms, &s_sys_temp_sensor);
+  if (s_sys_temp_sensor) {
+    Status st = s_sys_temp_sensor->Init();
+    if (!st.ok()) {
+      LOG(LL_ERROR, ("Sys temp sensor init failed: %s", st.ToString().c_str()));
+    }
+  }
 
   StartService(false /* quiet */);
 
@@ -1050,21 +1018,30 @@ void InitApp() {
       [](HAPAccessoryServerRef *) { HAPAccessoryServerStop(&s_server); },
       [](HAPAccessoryServerRef *) { StartService(false /* quiet */); });
 
-  shelly_rpc_service_init(&s_server, &s_kvs, &s_tcpm);
+  RPCServiceInit(&s_server, &s_kvs, &s_tcpm);
 
   DebugInit(&s_server, &s_kvs, &s_tcpm);
 
   mgos_event_add_handler(MGOS_EVENT_REBOOT, RebootCB, nullptr);
   mgos_event_add_handler(MGOS_EVENT_REBOOT_AFTER, RebootCB, nullptr);
 
-  mgos_event_add_handler(MGOS_EVENT_OTA_BEGIN, OTABeginCB, nullptr);
-  mgos_event_add_handler(MGOS_EVENT_OTA_STATUS, OTAStatusCB, nullptr);
-
   SetupButton(BTN_GPIO, BTN_DOWN);
 
   InitWifiConfigManager();
 
+  OTAInit(&s_server);
+
+#if MGOS_HAVE_PROMETHEUS_METRICS
+  const struct mgos_dns_sd_txt_entry prometheus_txt[] = {
+    {.key = "path", .value = MG_MK_STR("/metrics")},
+    {.key = "name", .value = mg_mk_str(mgos_sys_config_get_shelly_name())},
+    {.key = NULL},
+};
+  mgos_dns_sd_add_service_instance(mgos_sys_config_get_dns_sd_host_name(), "_prometheus-http._tcp", 80, prometheus_txt);
+#endif // MGOS_HAVE_PROMETHEUS_METRICS
+
   (void) s_ip_storage;
+
 }
 
 }  // namespace shelly

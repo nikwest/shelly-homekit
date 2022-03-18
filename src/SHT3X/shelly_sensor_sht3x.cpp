@@ -42,6 +42,10 @@ SHT3xSensor::SHT3xSensor(int bus_num, uint8_t i2caddr) {
 SHT3xSensor::~SHT3xSensor() {
 }
 
+Status SHT3xSensor::Init() {
+  return Status::OK();
+}
+
 StatusOr<float> SHT3xSensor::GetTemperature() {
   if (!sht31_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));

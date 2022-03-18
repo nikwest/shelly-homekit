@@ -12,6 +12,8 @@ class SHT3xSensor : public TempSensor, public HumiditySensor {
   SHT3xSensor(int bus_num, uint8_t i2caddr);
   virtual ~SHT3xSensor();
 
+  Status Init() override;
+
   StatusOr<float> GetTemperature() override;
   StatusOr<float> GetHumidity() override;
 

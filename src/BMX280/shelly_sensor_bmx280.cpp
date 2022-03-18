@@ -42,6 +42,10 @@ BMP280Sensor::BMP280Sensor(int bus_num, uint8_t i2caddr) {
 BMP280Sensor::~BMP280Sensor() {
 }
 
+Status BMP280Sensor::Init() {
+  return Status::OK();
+}
+
 StatusOr<float> BMP280Sensor::GetTemperature() {
   if (!bme280_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));

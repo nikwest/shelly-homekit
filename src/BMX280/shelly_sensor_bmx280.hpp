@@ -13,6 +13,7 @@ class BMP280Sensor : public TempSensor, public PressureSensor {
  public:
   BMP280Sensor(int bus_num, uint8_t i2caddr);
   virtual ~BMP280Sensor();
+  Status Init() override;
 
   StatusOr<float> GetTemperature() override;
   StatusOr<float> GetPressure() override;

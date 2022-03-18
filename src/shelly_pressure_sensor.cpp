@@ -47,4 +47,8 @@ PressureSensor::PressureSensor() {
 PressureSensor::~PressureSensor() {
 }
 
+void PressureSensor::SetNotifier(Notifier notifier) {
+  notifier_ = notifier;
+}
+
 }  // namespace shelly

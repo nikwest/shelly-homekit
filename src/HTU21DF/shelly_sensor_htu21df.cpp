@@ -43,6 +43,10 @@ HTU21DFSensor::HTU21DFSensor(int bus_num, uint8_t i2caddr) {
 HTU21DFSensor::~HTU21DFSensor() {
 }
 
+Status HTU21DFSensor::Init() {
+  return Status::OK();
+}
+
 StatusOr<float> HTU21DFSensor::GetTemperature() {
   if (!htu21df_) {
     LOG(LL_ERROR, ("Could not initialize sensor"));

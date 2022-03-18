@@ -47,4 +47,8 @@ CO2Sensor::CO2Sensor() {
 CO2Sensor::~CO2Sensor() {
 }
 
+void CO2Sensor::SetNotifier(Notifier notifier) {
+  notifier_ = notifier;
+}
+
 }  // namespace shelly

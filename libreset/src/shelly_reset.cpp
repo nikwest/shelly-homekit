@@ -18,6 +18,7 @@
 #include "shelly_reset.hpp"
 
 #include "mgos.hpp"
+#include "mgos_file_logger.h"
 #include "mgos_vfs.h"
 
 #if defined(MGOS_HAVE_VFS_FS_SPIFFS) || defined(MGOS_HAVE_VFS_FS_LFS)
@@ -118,12 +119,38 @@ bool WipeDevice() {
   for (const char *wipe_fn : s_wipe_files) {
     if (remove(wipe_fn) == 0) wiped = true;
   }
+  char *log;
+  while ((log = mgos_file_log_get_oldest_file_name()) != NULL) {
+    remove(log);
+    wiped = true;
+    free(log);
+  }
 #if defined(MGOS_HAVE_VFS_FS_SPIFFS) || defined(MGOS_HAVE_VFS_FS_LFS)
   if (wiped) {
     mgos_vfs_gc("/");
   }
 #endif
+  mgos_sys_config_set_file_logger_enable(false);
+
   return wiped;
+}
+
+void SanitizeSysConfig() {
+#ifdef MGOS_CONFIG_HAVE_WIFI
+  struct mgos_config_wifi wifi_cfg = {};
+  mgos_config_wifi_copy(mgos_sys_config_get_wifi(), &wifi_cfg);
+  // Load config up to level 8, just before the user level.
+  mgos_sys_config_load_level(&mgos_sys_config, MGOS_CONFIG_LEVEL_VENDOR_8);
+  // Copy WiFi settings back.
+  mgos_config_wifi_copy(&wifi_cfg, &mgos_sys_config.wifi);
+  mgos_config_wifi_free(&wifi_cfg);
+  char *device_id = strdup(mgos_sys_config_get_device_id());
+  mgos_expand_mac_address_placeholders(device_id);
+  mgos_sys_config_set_device_id(device_id);
+  free(device_id);
+  // Save the config. Only WiFi settings will be saved to conf9.json.
+  mgos_sys_config_save(&mgos_sys_config, false, nullptr);
+#endif  // MGOS_CONFIG_HAVE_WIFI
 }
 
 void WipeDeviceRevertToStock() {
@@ -135,20 +162,7 @@ void WipeDeviceRevertToStock() {
     remove(wipe_fn);
   }
   WipeDevice();
-#ifdef MGOS_CONFIG_HAVE_WIFI
-  mgos_wifi_disconnect();
-  struct mgos_config_wifi wifi_cfg = {};
-  mgos_config_wifi_copy(mgos_sys_config_get_wifi(), &wifi_cfg);
-  // Reset entire sys config to defaults.
-  mgos_config_set_defaults(&mgos_sys_config);
-  // Copy WiFi STA settings back.
-  mgos_config_wifi_sta_copy(&wifi_cfg.sta, &mgos_sys_config.wifi.sta);
-  mgos_config_wifi_sta_copy(&wifi_cfg.sta1, &mgos_sys_config.wifi.sta1);
-  mgos_config_wifi_sta_copy(&wifi_cfg.sta2, &mgos_sys_config.wifi.sta2);
-  mgos_config_wifi_free(&wifi_cfg);
-  // Save the config. Only WiFi settings will be saved to conf9.json.
-  mgos_sys_config_save(&mgos_sys_config, false, nullptr);
-#endif  // MGOS_CONFIG_HAVE_WIFI
+  SanitizeSysConfig();
 }
 
 bool IsSoftReboot() {

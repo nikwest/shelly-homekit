@@ -47,4 +47,8 @@ HumiditySensor::HumiditySensor() {
 HumiditySensor::~HumiditySensor() {
 }
 
+void HumiditySensor::SetNotifier(Notifier notifier) {
+  notifier_ = notifier;
+}
+
 }  // namespace shelly

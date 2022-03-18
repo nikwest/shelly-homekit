@@ -47,7 +47,7 @@ ShellySensor::~ShellySensor() {
 }
 
 Component::Type ShellySensor::type() const {
-  return Type::kSensor;
+  return Type::kTemperatureSensor;
 }
 
 std::string ShellySensor::name() const {
@@ -61,12 +61,12 @@ StatusOr<std::string> ShellySensor::GetInfo() const {
 
 StatusOr<std::string> ShellySensor::GetInfoJSON() const {
   std::string res = mgos::JSONPrintStringf(
-      "{id: %d, type: %d, model: %d, name: %Q",
-      id(), type(), cfg_->model, (cfg_->name ? cfg_->name : ""));
+      "{id: %d, type: %d, name: %Q, update_interval: %d", 
+      id(), type(), (cfg_->name ? cfg_->name : ""), 0);
   if(temp_) {
     auto temperature = temp_->GetTemperature();
     if (temperature.ok()) {
-      std::string t = mgos::JSONPrintStringf(", tvalue: %.1f, tunit: %d", temperature.ValueOrDie(), cfg_->tunit);
+      std::string t = mgos::JSONPrintStringf(", value: %.1f, unit: %d", temperature.ValueOrDie(), cfg_->tunit);
       res.append(t);
     }
   }
