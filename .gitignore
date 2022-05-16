@@ -12,3 +12,4 @@ fs/conf*.json
 flash-shelly.auth.yaml
 *.cfg.yaml
 .venv
+mos.yml.mine
