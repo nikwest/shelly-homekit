@@ -1,7 +1,7 @@
 MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 
 .PHONY: build check-format format release upload \				
-				Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyURGBW2 ShellyUNI Custom2 Custom16
+				Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyURGBW2 ShellyUNI Custom2 Custom16 CustomCWWW
 .SUFFIXES:
 
 MOS ?= mos
@@ -27,7 +27,8 @@ ifneq "$(VERBOSE)$(V)" "00"
   MOS_BUILD_FLAGS_FINAL += --verbose
 endif
 
-build: Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyURGBW2 ShellyUNI Custom2 Custom16
+build: Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyURGBW2 ShellyUNI Custom2 Custom16 	CustomCWWW
+
 
 release:
 	$(MAKE) build CLEAN=1 RELEASE=1
@@ -107,6 +108,9 @@ Custom2: build-Custom2
 
 Custom16: PLATFORM=esp32
 Custom16: build-Custom16
+	@true
+
+CustomCWWW: build-CustomCWWW
 	@true
 
 fs/index.html.gz: $(wildcard fs_src/*) Makefile

@@ -983,7 +983,7 @@ conds:
         MAX_NUM_HAP_SESSIONS: 16
       config_schema:
         - ["dash.enable", true]
-        - ["dash.token", "xEbCeg4oUbd5X57juJoP90Q"]
+        - ["dash.token", "xxx"]
         - ["device.id", "custom21-??????"]
         - ["shelly.name", "custom21-??????"]
         - ["wifi.ap.ssid", "custom21-??????"]
@@ -1033,6 +1033,8 @@ conds:
         - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
+        - location: https://github.com/mongoose-os-libs/rpc-service-config # optional
+        - location: https://github.com/mongoose-os-libs/rpc-ws # optional
       build_vars:
         MGOS_ROOT_FS_TYPE: SPIFFS
       cdefs:
@@ -1044,7 +1046,7 @@ conds:
         MAX_NUM_HAP_SESSIONS: 16
       config_schema:
         - ["dash.enable", true]
-        - ["dash.token", "Rf0rTOGoK8YE91d90xnc6LgQ"]
+        - ["dash.token", "xxx"]
         - ["i2c.debug", false]
         - ["i2c.enable", true]
         - ["i2c.sda_gpio", 18]
@@ -1135,7 +1137,29 @@ conds:
         - ["in16", "in", {title: "Input 16 settings"}]
         - ["in16.ssw.name", "Custom SSW16"]
         - ["in16.sensor.name", "Custom S16"]
-
+  
+  - when: build_vars.MODEL == "CustomCWWW"
+    apply:
+      name: switch
+      libs:
+        - location: https://github.com/mongoose-os-libs/mongoose
+          variant: esp8266-nossl
+ #       - location: https://github.com/mongoose-os-libs/dash # optional
+      cdefs:
+        PRODUCT_VENDOR: '"NikWest"'
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '"XXX"'
+        MG_ENABLE_SSL: 0
+        MAX_NUM_HAP_SESSIONS: 12
+      config_schema:
+        - ["dash.enable", false]
+        - ["dash.token", "xxx"]
+        - ["device.id", "customCWWW-??????"]
+        - ["shelly.name", "customCWWW-??????"]
+        - ["wifi.ap.ssid", "customCWWW-??????"]
+        - ["lb1", "lb", {title: "Light bulb settings"}]
+        - ["lb1.initial_state", 2] # last
+  
   # Test device for BLE development.
   - when: build_vars.MODEL == "ShellyT32"
   - when: build_vars.MODEL == "ShellyURGBW2"
