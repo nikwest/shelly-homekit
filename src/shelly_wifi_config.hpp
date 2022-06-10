@@ -46,6 +46,7 @@ struct WifiConfig {
   WifiAPConfig ap;
   WifiSTAConfig sta;
   WifiSTAConfig sta1;
+  int sta_ps_mode = 0;
 
   std::string ToJSON() const;
 };
@@ -76,5 +77,9 @@ std::string ScreenPassword(const std::string &pw);
 void InitWifiConfigManager();
 
 void StartWifiConfigManager();
+
+std::string GetMACAddr(bool sta = true, bool delims = true);
+
+std::string FormatMACAddr(const uint8_t *mac, bool delims);
 
 }  // namespace shelly

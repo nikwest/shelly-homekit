@@ -1,6 +1,6 @@
 author: Shelly-HomeKit contributors
 description: A HomeKit firmware for Shelly switches
-version: 2.11.0-beta3
+version: 2.11.0-beta5
 
 libs_version: latest
 modules_version: latest
@@ -581,6 +581,7 @@ conds:
         ESP_IDF_SDKCONFIG_OPTS: >
           ${build_vars.ESP_IDF_SDKCONFIG_OPTS}
             CONFIG_FREERTOS_UNICORE=y
+            CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
       cdefs:
         LED_GPIO: 0
         LED_ON: 0
@@ -616,6 +617,7 @@ conds:
         ESP_IDF_SDKCONFIG_OPTS: >
           ${build_vars.ESP_IDF_SDKCONFIG_OPTS}
             CONFIG_FREERTOS_UNICORE=y
+            CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
       cdefs:
         LED_GPIO: 0
         LED_ON: 0
@@ -656,6 +658,7 @@ conds:
         ESP_IDF_SDKCONFIG_OPTS: >
           ${build_vars.ESP_IDF_SDKCONFIG_OPTS}
             CONFIG_FREERTOS_UNICORE=y
+            CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
       cdefs:
         LED_GPIO: 0
         LED_ON: 0
@@ -793,6 +796,7 @@ conds:
         ESP_IDF_SDKCONFIG_OPTS: >
           ${build_vars.ESP_IDF_SDKCONFIG_OPTS}
             CONFIG_FREERTOS_UNICORE=y
+            CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
       cdefs:
         LED_GPIO: 13
         LED_ON: 1
@@ -844,6 +848,28 @@ conds:
         - ["in1", "in", {title: "Input 1 settings"}]
         - ["in1.ssw.name", "ShellyU SSW1"]
         - ["in1.sensor.name", "ShellyU S1"]
+
+  - when: build_vars.MODEL == "ShellyUDuo"
+    apply:
+      sources:
+        - src/ShellyDuo/shelly_init.cpp
+        - src/mock/pwm
+        - src/mock/wifi_config
+      libs:
+        - location: https://github.com/mongoose-os-libs/mongoose
+          variant: ubuntu-nossl
+      cdefs:
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '""'
+        MG_ENABLE_SSL: 0
+        SHELLY_HAVE_PM: 0
+        BTN_NOISY: 0
+      config_schema:
+        - ["device.id", "ShellyUBulbDuo-??????"]
+        - ["shelly.name", "ShellyUBulbDuo-??????"]
+        - ["wifi.ap.ssid", "ShellyUBulbDuo-??????"]
+        - ["lb1", "lb", {title: "Light bulb settings"}]
+        - ["lb1.initial_state", 2] # last
 
   - when: build_vars.MODEL == "ShellyU25"
     apply:

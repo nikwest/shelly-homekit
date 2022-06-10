@@ -1,7 +1,8 @@
 MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 
 .PHONY: build check-format format release upload \				
-				Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyURGBW2 ShellyUNI Custom2 Custom16 CustomCWWW
+				Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyPlusI4 ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyUDuo ShellyURGBW2 ShellyUNI \
+				 Custom2 Custom16 CustomCWWW
 .SUFFIXES:
 
 MOS ?= mos
@@ -92,6 +93,10 @@ ShellyU: build-ShellyU
 
 ShellyU25: PLATFORM=ubuntu
 ShellyU25: build-ShellyU25
+	@true
+
+ShellyUDuo: PLATFORM=ubuntu
+ShellyUDuo: build-ShellyUDuo
 	@true
 
 ShellyURGBW2: PLATFORM=ubuntu

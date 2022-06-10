@@ -45,11 +45,19 @@ std::string WifiConfig::ToJSON() const {
   return mgos::JSONPrintStringf(
       "{ap: {enable: %B, ssid: %Q, pass: %Q}, "
       "sta: {enable: %B, ssid: %Q, pass: %Q, ip: %Q, netmask: %Q, gw: %Q}, "
-      "sta1: {enable: %B, ssid: %Q, pass: %Q, ip: %Q, netmask: %Q, gw: %Q}}",
+      "sta1: {enable: %B, ssid: %Q, pass: %Q, ip: %Q, netmask: %Q, gw: %Q}, "
+      "sta_ps_mode: %d}",
       ap.enable, ap.ssid.c_str(), ap_pw.c_str(), sta.enable, sta.ssid.c_str(),
       sta_pw.c_str(), sta.ip.c_str(), sta.netmask.c_str(), sta.gw.c_str(),
       sta1.enable, sta1.ssid.c_str(), sta1_pw.c_str(), sta.ip.c_str(),
-      sta.netmask.c_str(), sta.gw.c_str());
+      sta.netmask.c_str(), sta.gw.c_str(), sta_ps_mode);
+}
+
+std::string FormatMACAddr(const uint8_t *mac, bool delims) {
+  return (delims ? mgos::SPrintf("%02x:%02x:%02x:%02x:%02x:%02x", mac[0],
+                                 mac[1], mac[2], mac[3], mac[4], mac[5])
+                 : mgos::SPrintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1],
+                                 mac[2], mac[3], mac[4], mac[5]));
 }
 
 }  // namespace shelly
