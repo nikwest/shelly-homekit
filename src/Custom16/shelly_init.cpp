@@ -19,6 +19,7 @@
 
 #include "shelly_hap_garage_door_opener.hpp"
 #include "shelly_input_pin.hpp"
+//#include "shelly_sys_led_btn.hpp"
 //#include "shelly_sensor_sht3x.hpp"
 //#include "shelly_sensor_htu21df.hpp"
 #ifdef HAVE_BMX280
@@ -30,10 +31,15 @@
 #include "custom16_pcf857x_input.hpp"
 
 #include "mgos_pcf857x.h"
+#include "shelly_temp_sensor_ow.hpp"
 
+#ifndef MAX_TS_NUM
+#define MAX_TS_NUM 1
+#endif
 namespace shelly {
 
 static bool create_failed = false;
+static std::unique_ptr<Onewire> s_onewire;
 
 void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
                        std::vector<std::unique_ptr<Output>> *outputs,
@@ -49,21 +55,19 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
   struct mgos_pcf857x *dout, *din;
 
   if (!(dout = mgos_pcf8575_create(mgos_i2c_get_global(), 0x20, -1))) {
-    LOG(LL_ERROR, ("Could not create ouptput PCF857X"));
+    LOG(LL_ERROR, ("Could not create ouptput PCF857X at 0x20"));
     create_failed = true;
-    return;
   }
   if (!(din = mgos_pcf8575_create(mgos_i2c_get_global(), 0x21, 14))) {
-    LOG(LL_ERROR, ("Could not create input PCF857X"));
+    LOG(LL_ERROR, ("Could not create input PCF857X at 0x21"));
     create_failed = true;
-    return;
   }
 
   for(int i = 0; i<16; i++) {
     outputs->emplace_back(new custom16::OutputPCF857xPin(i+1, dout, i, 1));
     auto *in = new custom16::InputPCF857xPin(i+1, din, i, 1, MGOS_GPIO_PULL_UP, (i==0));
     if(i==0) {
-      in->AddHandler(std::bind(&HandleInputResetSequence, in, 4, _1, _2));
+      in->AddHandler(std::bind(&HandleInputResetSequence, in, 21, _1, _2));
     }
     in->Init();
     inputs->emplace_back(in);
@@ -73,31 +77,27 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
   struct mgos_pcf857x *dout0, *dout1, *din0, *din1;
 
   if (!(dout0 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x39, -1))) {
-    LOG(LL_ERROR, ("Could not create ouptput PCF857X"));
+    LOG(LL_ERROR, ("Could not create ouptput PCF857X at 0x39"));
     create_failed = true;
-    return;
   }
   if (!(dout1 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x38, -1))) {
-    LOG(LL_ERROR, ("Could not create ouptput PCF857X"));
+    LOG(LL_ERROR, ("Could not create ouptput PCF857X at 0x38"));
     create_failed = true;
-    return;
   }
   if (!(din0 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x3e, 17))) {
-    LOG(LL_ERROR, ("Could not create input PCF857X"));
+    LOG(LL_ERROR, ("Could not create input PCF857X at 0x3e"));
     create_failed = true;
-    return;
   }
   if (!(din1 = mgos_pcf8574_create(mgos_i2c_get_global(), 0x3f, 5))) {
-    LOG(LL_ERROR, ("Could not create input PCF857X"));
+    LOG(LL_ERROR, ("Could not create input PCF857X at 0x3f"));
     create_failed = true;
-    return;
   }
 
   for(int i = 0; i<8; i++) {
     outputs->emplace_back(new custom16::OutputPCF857xPin(i+1, dout0, i, 1));
     auto *in = new custom16::InputPCF857xPin(i+1, din0, i, 1, MGOS_GPIO_PULL_UP, (i==0));
     if(i==0) {
-      in->AddHandler(std::bind(&HandleInputResetSequence, in, 4, _1, _2));
+      in->AddHandler(std::bind(&HandleInputResetSequence, in, 21, _1, _2));
     }
     in->Init();
     inputs->emplace_back(in);
@@ -109,6 +109,12 @@ void CreatePeripherals(std::vector<std::unique_ptr<Input>> *inputs,
     inputs->emplace_back(in);
   }
 #endif
+//  InitSysLED(LED_GPIO, LED_ON);
+
+  s_onewire.reset(new Onewire(27));
+  if (s_onewire->DiscoverAll().empty()) {
+    s_onewire.reset();
+  }
   (void) pms;
 }
 
@@ -116,9 +122,9 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
                       std::vector<std::unique_ptr<mgos::hap::Accessory>> *accs,
                       HAPAccessoryServerRef *svr) {
   
-  if(create_failed) {
-    return;
-  }
+  // if(create_failed) {
+  //   return;
+  // }
 
   CreateHAPSwitch(1, mgos_sys_config_get_sw1(), mgos_sys_config_get_in1(),
                   comps, accs, svr, false /* to_pri_acc */);
@@ -153,6 +159,23 @@ void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,
   CreateHAPSwitch(16, mgos_sys_config_get_sw16(), mgos_sys_config_get_in16(),
                   comps, accs, svr, false /* to_pri_acc */);
   
+    // Sensor Discovery
+  std::vector<std::unique_ptr<TempSensor>> sensors;
+  if (s_onewire != nullptr) {
+    sensors = s_onewire->DiscoverAll();
+  }
+
+  if (!sensors.empty()) {
+    struct mgos_config_ts *ts_cfgs[MAX_TS_NUM] = {
+        (struct mgos_config_ts *) mgos_sys_config_get_ts1(),
+    };
+
+    for (size_t i = 0; i < std::min((size_t) MAX_TS_NUM, sensors.size()); i++) {
+      auto *ts_cfg = ts_cfgs[i];
+      CreateHAPTemperatureSensor(i + 1, std::move(sensors[i]), ts_cfg, comps,
+                                 accs, svr);
+    }
+  }
 }
 
 }  // namespace shelly

@@ -17,18 +17,34 @@
 
 #pragma once
 
-
-#ifndef LED_ON
-#define LED_ON 0
-#endif
-#ifndef LED_GPIO
-#define LED_GPIO -1
-#endif
+#include "mgos_timers.hpp"
+#include "shelly_common.hpp"
 
 namespace shelly {
 
-void InitSysLED(int gpio, bool active_high);
-void CheckSysLED();
-void InitSysBtn(int pin, bool on_value);
+class Fan {
+ public:
+  Fan(int pwm_pin, int rpm_pin);
+  Fan(int pwm_pin);
+  ~Fan();
 
-}  // namespace shelly
+  Status Init();
+
+  StatusOr<int> GetRPM();
+  void SetMaxTemp(int temp);
+  void SetMinTemp(int temp);
+  void Adjust(int temp);
+
+ private:
+  int max_temp_;
+  int min_temp_;
+  int pwm_pin_;
+  int rpm_pin_;
+  float pwm_ = 0.0;
+  StatusOr<int> rpm_;
+  mgos::Timer update_timer_;
+  volatile uint32_t count_ = 0;
+  static void GPIOIntHandler(int pin, void *arg);
+  void UpdateCB();
+};
+} // namespace shelly

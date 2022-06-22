@@ -40,11 +40,18 @@ Onewire::Onewire(int pin_in, int pin_out) {
   ow_ = mgos_onewire_create_separate_io(pin_in, pin_out);
 }
 
+Onewire::Onewire(int pin_in) {
+  pin_out_ = -1;
+  ow_ = mgos_onewire_create(pin_in);
+}
+
 Onewire::~Onewire() {
   mgos_onewire_close(ow_);
 
   // release output pin
-  mgos_gpio_setup_input(pin_out_, MGOS_GPIO_PULL_UP);
+  if(pin_out_ != -1) {
+    mgos_gpio_setup_input(pin_out_, MGOS_GPIO_PULL_UP);
+  }
 }
 
 struct mgos_onewire *Onewire::Get() {

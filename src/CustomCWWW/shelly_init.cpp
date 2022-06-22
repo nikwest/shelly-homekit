@@ -20,16 +20,54 @@
 #include "shelly_hap_light_bulb.hpp"
 #include "shelly_input_pin.hpp"
 #include "shelly_light_bulb_controller.hpp"
+#include "shelly_temp_sensor_ow.hpp"
+#include "shelly_fan_pwm.hpp"
 #include "shelly_main.hpp"
 
 namespace shelly {
 
+static std::unique_ptr<Onewire> s_onewire;
+static std::unique_ptr<Fan> s_fan;
+
 void CreatePeripherals(UNUSED_ARG std::vector<std::unique_ptr<Input>> *inputs,
                        std::vector<std::unique_ptr<Output>> *outputs,
                        UNUSED_ARG std::vector<std::unique_ptr<PowerMeter>> *pms,
-                       UNUSED_ARG std::unique_ptr<TempSensor> *sys_temp) {
+                      std::unique_ptr<TempSensor> *sys_temp) {
   outputs->emplace_back(new OutputPin(1, 12, 1));
   outputs->emplace_back(new OutputPin(2, 14, 1));
+
+  std::vector<std::unique_ptr<TempSensor>> sensors;
+  s_onewire.reset(new Onewire(4));
+  sensors = s_onewire->DiscoverAll();
+  if (sensors.empty()) {
+    LOG(LL_ERROR, ("Could not create onewire temp sensor"));
+    s_onewire.reset();
+  } else {
+    std::unique_ptr<TempSensor> sensor = std::move(sensors[0]);
+    if(mgos_sys_config_get_t0_update_interval() > 0) {      
+      sensor->StartUpdating(mgos_sys_config_get_t0_update_interval()*1000);
+      Fan* fan = new Fan(mgos_sys_config_get_fan0_pwm_pin(), mgos_sys_config_get_fan0_rpm_pin());
+      Status status = fan->Init();
+      if(status.ok()) {
+        fan->SetMinTemp(mgos_sys_config_get_shelly_overheat_off()-20);
+        fan->SetMaxTemp(mgos_sys_config_get_shelly_overheat_off());
+        TempSensor* s = sensor.get();
+        sensor->SetNotifier( [fan, s] {
+          StatusOr<float> temp = s->GetTemperature();
+          if(temp.ok()) {
+            fan->Adjust((int) temp.ValueOrDie());
+          }
+        });
+        s_fan.reset(fan);
+      } else {
+        LOG(LL_ERROR, ("Fan init failed: %s", status.error_message().c_str()));
+      }
+    } else {
+      LOG(LL_ERROR, ("No onewire temp sensor updating interval given."));
+    }
+    sys_temp->reset(sensor.release());
+  }
+
 }
 
 void CreateComponents(std::vector<std::unique_ptr<Component>> *comps,

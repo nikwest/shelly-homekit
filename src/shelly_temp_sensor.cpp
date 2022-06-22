@@ -33,7 +33,6 @@ static void metrics_shelly_temperatur(struct mg_connection *nc, void *user_data)
         "%.3f", temp.ValueOrDie());
 
   }
-  (void) user_data;
 }
 #endif // MGOS_HAVE_PROMETHEUS_METRICS
 

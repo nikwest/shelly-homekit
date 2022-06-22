@@ -114,12 +114,16 @@ config_schema:
   - ["se", "o", {title: "Sensor settings", abstract: true}]
   - ["se.name", "s", "Sensor", {title: "Sensor name"}]
   - ["se.tunit", "i", 0, {title: "Sensor unit 0 - Celcius, 1 - Fahrenheit"}]
-  - ["se.model", "i", 0, {title: "Sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021"}]
+  - ["se.model", "i", 0, {title: "i2c sensor model: 0 - BMP280, 1 - BME280, 2 - HTU21, 3 - SHT3x, 4 - SI7021"}]
   - ["se.i2c_bus", "i", 0, {title: "i2c bus number"}]
   - ["se.i2c_addr", "i", 0, {title: "i2c address number"}]
   - ["se.enable", "b", true, {title: "Enable this sensor in the accessory"}]
   - ["co2.detected_level", "f", 1500.0, {title: "CO2 level which is reported abnormal"}]
   
+  - ["fan", "o", {title: "Fan settings", abstract: true}]
+  - ["fan.pwm_pin", "i", -1, {title: "PWM pin to set speed"}]
+  - ["fan.rpm_pin", "i", -1, {title: "RPM pin to read speed"}]
+
   # Preserved from stock.
   - ["k_apparent", "i", 1750000, {}]
   - ["max_power", "i", 1800, {}]
@@ -140,8 +144,6 @@ build_vars:
 cdefs:
   PRODUCT_VENDOR: '"Allterco"'
   PRODUCT_MODEL: '"${build_vars.MODEL}"'
-  LED_GPIO: -1
-  LED_ON: 0
   BTN_GPIO: -1
   BTN_DOWN: 0
   BTN_NOISY: 1
@@ -1051,18 +1053,22 @@ conds:
     apply:
       platform: esp32
       name: switch
+      sources:
+        - src/DS18XXX
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: esp32-nossl
         - location: https://github.com/mongoose-os-libs/i2c
         - location: https://github.com/mongoose-os-libs/pcf857x-i2c  
+        - location: https://github.com/mongoose-os-libs/provision # optional
         - location: https://github.com/mongoose-os-libs/dash # optional
         - location: https://github.com/mongoose-os-libs/rpc-service-i2c # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-gpio # optional, debug
         - location: https://github.com/mongoose-os-libs/rpc-service-config # optional
         - location: https://github.com/mongoose-os-libs/rpc-ws # optional
+        - location: https://github.com/mongoose-os-libs/onewire # optional
       build_vars:
-        MGOS_ROOT_FS_TYPE: SPIFFS
+        MGOS_ROOT_FS_TYPE: LFS
       cdefs:
         PRODUCT_VENDOR: '"NikWest"'
         PRODUCT_HW_REV: '"1.0"'
@@ -1070,9 +1076,14 @@ conds:
         MG_ENABLE_SSL: 0
         PCF8574: 1
         MAX_NUM_HAP_SESSIONS: 16
+#        LED_GPIO: 21
+#        LED_ON: 0      
       config_schema:
         - ["dash.enable", true]
-        - ["dash.token", "xxx"]
+#        - ["dash.token", "xxx"] # one
+        - ["dash.token", "xxx"] # two
+        - ["wifi.sta_ps_mode", 0]
+        - ["provision.led.pin", 21]
         - ["i2c.debug", false]
         - ["i2c.enable", true]
         - ["i2c.sda_gpio", 18]
@@ -1163,11 +1174,18 @@ conds:
         - ["in16", "in", {title: "Input 16 settings"}]
         - ["in16.ssw.name", "Custom SSW16"]
         - ["in16.sensor.name", "Custom S16"]
-  
+        - ["ts1", "ts", {title: "TS1 settings"}]
+        - ["ts1.name", "Custom TS1"]
+        - ["ts1.update_interval", 5]
+
   - when: build_vars.MODEL == "CustomCWWW"
     apply:
       name: switch
+      sources:
+        - src/DS18XXX
+        - src/Fan
       libs:
+        - location: https://github.com/mongoose-os-libs/onewire
         - location: https://github.com/mongoose-os-libs/mongoose
           variant: esp8266-nossl
  #       - location: https://github.com/mongoose-os-libs/dash # optional
@@ -1182,10 +1200,17 @@ conds:
         - ["dash.token", "xxx"]
         - ["device.id", "customCWWW-??????"]
         - ["shelly.name", "customCWWW-??????"]
+        - ["shelly.overheat_on", 60]
+        - ["shelly.overheat_off", 50]
         - ["wifi.ap.ssid", "customCWWW-??????"]
         - ["lb1", "lb", {title: "Light bulb settings"}]
         - ["lb1.initial_state", 2] # last
-  
+        - ["t0", "ts", {title: "System temp sensor settings"}]
+        - ["t0.update_interval", 10]
+        - ["fan0", "fan", {title: "Fan0  settings"}]
+        - ["fan0.pwm_pin", 0]
+        - ["fan0.rpm_pin", 2]
+
   # Test device for BLE development.
   - when: build_vars.MODEL == "ShellyT32"
   - when: build_vars.MODEL == "ShellyURGBW2"
