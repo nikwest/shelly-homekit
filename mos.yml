@@ -145,7 +145,7 @@ cdefs:
   PRODUCT_VENDOR: Allterco
   PRODUCT_MODEL: ${build_vars.MODEL}
   LED_GPIO: -1
-  LED_ON: 0
+#  LED_ON: 0
   BTN_GPIO: -1
   BTN_DOWN: 0
   BTN_NOISY: 1
@@ -991,14 +991,59 @@ conds:
         - ["bme680.bsec.rh_sample_rate", "ULP"]
         - ["bme680.bsec.ps_sample_rate", "ULP"]
 
-  - when: build_vars.MODEL == "Custom2"
+  - when: build_vars.MODEL == "Custom"
     apply:
  #     platform: esp32
       name: switch
+      sources:
+        - src/DS18XXX
       libs:
         - location: https://github.com/mongoose-os-libs/mongoose
 #          variant: esp32-nossl
           variant: esp8266-nossl
+        - location: https://github.com/mongoose-os-libs/onewire
+ #       - location: https://github.com/mongoose-os-libs/dash # optional
+      # build_vars:
+      #   FLASH_SIZE: 2097152  #esp 8266:  4194304
+      #   FS_SIZE: 262144
+      #   BOOT_CONFIG_ADDR: 0x1000
+      #   MGOS_ROOT_FS_TYPE: SPIFFS
+      cdefs:
+        PRODUCT_VENDOR: '"NikWest"'
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '"XXX"'
+        MG_ENABLE_SSL: 0
+        MAX_NUM_HAP_SESSIONS: 12
+        MAX_TS_NUM: 2
+      config_schema:
+        - ["device.id", "custom21-??????"]
+        - ["shelly.name", "custom21-??????"]
+        - ["wifi.ap.ssid", "custom21-??????"]
+        - ["i2c.debug", false]
+        - ["i2c.enable", true]
+        - ["i2c.sda_gpio", 4]
+        - ["i2c.scl_gpio", 5]
+        - ["sw1", "sw", {title: "SW1 settings"}]
+        - ["sw1.name", "Shelly SW1"]
+        - ["in1", "in", {title: "Input 1 settings"}]
+        - ["in1.ssw.name", "Shelly SSW1"]
+        - ["in1.sensor.name", "Shelly S1"]
+        - ["ts1", "ts", {title: "TS1 settings"}]
+        - ["ts1.name", "Custom TS1"]
+        - ["ts1.update_interval", 10]
+        - ["ts2", "ts", {title: "TS2 settings"}]
+        - ["ts2.name", "Custom TS2"]
+        - ["ts2.update_interval", 10]
+
+
+  - when: build_vars.MODEL == "Custom2"
+    apply:
+      platform: esp32
+      name: switch
+      libs:
+        - location: https://github.com/mongoose-os-libs/mongoose
+          variant: esp32-nossl
+ #         variant: esp8266-nossl
  #       - location: https://github.com/mongoose-os-libs/dash # optional
       # build_vars:
       #   FLASH_SIZE: 2097152  #esp 8266:  4194304
@@ -1083,7 +1128,7 @@ conds:
       config_schema:
         - ["dash.enable", true]
 #        - ["dash.token", "xxx"] # one
-        - ["dash.token", "xxx"] # two
+#        - ["dash.token", "xxx"] # two
         - ["wifi.sta_ps_mode", 0]
         - ["provision.led.pin", 21]
         - ["i2c.debug", false]
@@ -1212,6 +1257,39 @@ conds:
         - ["fan0", "fan", {title: "Fan0  settings"}]
         - ["fan0.pwm_pin", 0]
         - ["fan0.rpm_pin", 2]
+
+  - when: build_vars.MODEL == "SonoffBasic"
+    apply:
+      name: sonoffbasic 
+      libs:
+#        - location: https://github.com/mongoose-os-libs/onewire
+        - location: https://github.com/mongoose-os-libs/mongoose
+          variant: esp8266-nossl
+      build_vars:
+        FLASH_SIZE: 1048576
+        FS_SIZE: 131072
+#        BOOT_CONFIG_ADDR: 0x1000  # To be compatible with stock firmware.
+        MGOS_ROOT_FS_TYPE: SPIFFS
+      cdefs:
+        PRODUCT_HW_REV: '"1.0"'
+        STOCK_FW_MODEL: '"SONOFF-BASIC"'
+        # We don't use SSL, HomeKit uses its own crypto. This saves ~120K.
+        MG_ENABLE_SSL: 0
+      config_schema:
+        - ["device.id", "sonoffbasic-??????"]
+        - ["shelly.name", "sonoffbasic-??????"]
+        - ["wifi.ap.ssid", "sonoffbasic-??????"]
+        - ["sw1", "sw", {title: "SW1 settings"}]
+        - ["sw1.name", "Shelly SW"]
+        - ["in1", "in", {title: "Input 1 settings"}]
+        - ["in1.ssw.name", "Shelly SSW1"]
+        - ["in1.sensor.name", "Shelly S1"]
+        - ["gdo1", "gdo", {title: "GDO1 settings"}]
+        - ["gdo1.name", "Garage Door"]
+        - ["gdo1.open_sensor_mode", -1]
+        # Only for backward compatibility (config <= v3).
+        - ["ssw1", "ssw", {title: "SSW1 settings"}]
+        - ["ssw1.name", "Input"]
 
   # Test device for BLE development.
   - when: build_vars.MODEL == "ShellyT32"

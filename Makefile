@@ -2,7 +2,7 @@ MAKEFLAGS += --warn-undefined-variables --no-builtin-rules
 
 .PHONY: build check-format format release upload \				
 				Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyPlusI4 ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyUDuo ShellyURGBW2 ShellyUNI \
-				 Custom2 Custom16 CustomCWWW
+				Custom Custom2 Custom16 CustomCWWW SonoffBasic
 .SUFFIXES:
 
 MOS ?= mos
@@ -28,7 +28,8 @@ ifneq "$(VERBOSE)$(V)" "00"
   MOS_BUILD_FLAGS_FINAL += --verbose
 endif
 
-build: Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyURGBW2 ShellyUNI Custom2 Custom16 	CustomCWWW
+build: Shelly1 Shelly1L Shelly1PM Shelly25 Shelly2 ShellyColorBulb ShellyDuo ShellyI3 ShellyPlug ShellyPlugS ShellyPlus1 ShellyPlus1PM ShellyRGBW2 ShellyVintage ShellyU ShellyU25 ShellyURGBW2 ShellyUNI \
+ Custom Custom2 Custom16 	CustomCWWW
 
 
 release:
@@ -107,7 +108,11 @@ ShellyT32: PLATFORM=esp32
 ShellyT32: build-ShellyT32
 	@true
 
-#Custom2: PLATFORM=esp32
+#Custom: PLATFORM=esp32
+Custom: build-Custom
+	@true
+
+Custom2: PLATFORM=esp32
 Custom2: build-Custom2
 	@true
 
@@ -116,6 +121,9 @@ Custom16: build-Custom16
 	@true
 
 CustomCWWW: build-CustomCWWW
+	@true
+
+SonoffBasic: build-SonoffBasic
 	@true
 
 fs/index.html.gz: $(wildcard fs_src/*) Makefile

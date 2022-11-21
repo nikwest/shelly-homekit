@@ -13,3 +13,6 @@ flash-shelly.auth.yaml
 *.cfg.yaml
 .venv
 mos.yml.mine
+conf5.json
+Current.config
+

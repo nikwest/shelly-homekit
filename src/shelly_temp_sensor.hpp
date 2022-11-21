@@ -40,6 +40,7 @@ class TempSensor {
 
  protected:
   Notifier notifier_;
-};
+  void *cbref_;
+};  
 
 }  // namespace shelly

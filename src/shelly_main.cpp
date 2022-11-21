@@ -859,8 +859,8 @@ void InitApp() {
   const struct mgos_dns_sd_txt_entry prometheus_txt[] = {
     {.key = "path", .value = MG_MK_STR("/metrics")},
     {.key = "name", .value = mg_mk_str(mgos_sys_config_get_shelly_name())},
-    {.key = NULL},
-};
+    {.key = NULL, .value = MG_MK_STR("")},
+  };
   mgos_dns_sd_add_service_instance(mgos_sys_config_get_dns_sd_host_name(), "_prometheus-http._tcp", 80, prometheus_txt);
 #endif // MGOS_HAVE_PROMETHEUS_METRICS
 

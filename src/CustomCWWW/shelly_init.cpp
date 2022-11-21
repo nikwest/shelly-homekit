@@ -21,6 +21,7 @@
 #include "shelly_input_pin.hpp"
 #include "shelly_light_bulb_controller.hpp"
 #include "shelly_temp_sensor_ow.hpp"
+#include "shelly_temp_sensor_ntc.hpp"
 #include "shelly_fan_pwm.hpp"
 #include "shelly_main.hpp"
 
@@ -67,6 +68,9 @@ void CreatePeripherals(UNUSED_ARG std::vector<std::unique_ptr<Input>> *inputs,
     }
     sys_temp->reset(sensor.release());
   }
+
+  // 1.0V if used with WeMos or other dev boards, 3.3V otherwise
+  //sys_temp->reset(new TempSensorSDNT1608X103F3950(0, 1.0f, 37400.0f));
 
 }
 
