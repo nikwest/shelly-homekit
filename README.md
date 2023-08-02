@@ -20,12 +20,12 @@ Reverting to stock firmware is also possible [see here](https://github.com/mongo
 
 ## Supported devices and features
 
-||[1]|1PM|[+1]|[+1PM]|[1L]|[Plug]|[PlugS]|2|2.5|i3|+i4([AC]/[DC])|[UNI]|[RGBW2]|[Bulb]|[Duo]|[Vintage]|
+||[1]|1PM|[+1]|[+1PM]|[1L]|[Plug]|PlugS|2|2.5|i3|+i4([AC]/[DC])|[UNI]|[RGBW2]|[Bulb]|[Duo]|[Vintage]|
 |-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|
 |Switch & Co.<sup>1</sup>|✓|✓|✓|✓|✓|✓|✓|✓|✓|✗|✗|✓|✗|✗|✗|✗|
 |Stateless Input<sup>2</sup>|✓|✓|✓|✓|✓|✗|✗|✓|✓|✓|✓|✓|✓|✗|✗|✗|
 |Sensors<sup>3</sup>|✓|✓|✓|✓|✓|✗|✗|✓|✓|✓|✓|✓|✓|✗|✗|✗|
-|Temperature measurement|✓<sup>4</sup>|✓<sup>4</sup>|✗|✗|✗|✗|✗|✗|✗|✗|✗|-|✗|✗|✗|✗|
+|Temperature measurement|✓<sup>4</sup>|✓<sup>4</sup>|-|-|✗|✗|✗|✗|✗|✗|-|-|✗|✗|✗|✗|
 |Garage door opener|✓|✓|✓|✓|✗|✗|✗|✓|✓|✗|✗|✓|✗|✗|✗|✗|
 |Roller shutter mode|✗|✗|✗|✗|✗|✗|✗|✗|✓|✗|✗|✗|✗|✗|✗|✗|
 |Power measurement|✗|✓|✗|✓|-|✓|✓|✗|✓|✗|✗|✗|-|-|-|-|

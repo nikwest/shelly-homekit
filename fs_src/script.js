@@ -60,7 +60,9 @@ class Component_Type {
   static kTemperatureSensor = 12;
   static kLeakSensor = 13;
   static kSmokeSensor = 14;
-  static kMax = 15;
+  static kCarbonMonoxideSensor = 15;
+  static kCarbonDioxideSensor = 16;
+  static kMax = 17;
 };
 
 // Keep in sync with shelly::LightBulbController::BulbType.
@@ -122,6 +124,9 @@ el("hap_setup_btn").onclick = function() {
   // alone.
   let input = lastInfo.device_id + (lastInfo.wifi_ssid || "") +
       (lastInfo.wifi_pass_h || "");
+  // Remove non-alphanumeric chars,
+  // https://github.com/mongoose-os-apps/shelly-homekit/issues/1216
+  input = input.replace(/[^a-z0-9]/gi, "");
   let seed = sha256(input).toLowerCase();
   let code = "", id = "";
   for (let i = 0; i < 8; i++) {
@@ -205,6 +210,7 @@ el("wifi_save_btn").onclick = function() {
       ip: (sta_static ? el("wifi_ip").value : ""),
       netmask: (sta_static ? el("wifi_netmask").value : ""),
       gw: (sta_static ? el("wifi_gw").value : ""),
+      nameserver: el("wifi_nameserver").value,
     },
     sta1: {
       enable: el("wifi1_en").checked,
@@ -212,6 +218,7 @@ el("wifi_save_btn").onclick = function() {
       ip: (sta1_static ? el("wifi1_ip").value : ""),
       netmask: (sta1_static ? el("wifi1_netmask").value : ""),
       gw: (sta1_static ? el("wifi1_gw").value : ""),
+      nameserver: el("wifi1_nameserver").value,
     },
     ap: {
       enable: el("wifi_ap_en").checked,
@@ -382,6 +389,7 @@ function swSetConfig(c) {
   let cfg = {
     name: name,
     svc_type: parseInt(el(c, "svc_type").value),
+    hk_state_inverted: el(c, "hk_state_inverted").checked,
     initial_state: parseInt(el(c, "initial").value),
     auto_off: autoOff,
     in_inverted: el(c, "in_inverted").checked,
@@ -536,6 +544,10 @@ function findOrAddContainer(cd) {
         setComponentState(c, {state: !c.data.state}, el(c, "set_spinner"));
         markInputChanged(ev);
       };
+      if (cd.type == Component_Type.kSwitch ||
+          cd.type == Component_Type.kOutlet) {
+        el(c, "hk_state_inverted_container").style.display = "block";
+      }
       el(c, "save_btn").onclick = function() {
         swSetConfig(c);
       };
@@ -592,6 +604,8 @@ function findOrAddContainer(cd) {
     case Component_Type.kContactSensor:
     case Component_Type.kLeakSensor:
     case Component_Type.kSmokeSensor:
+    case Component_Type.kCarbonMonoxideSensor:
+    case Component_Type.kCarbonDioxideSensor:
       c = el("sensor_template").cloneNode(true);
       c.id = elId;
       el(c, "save_btn").onclick = function() {
@@ -669,6 +683,7 @@ function rgbState(c, newState) {
 
 function updateComponent(cd) {
   let c = findOrAddContainer(cd);
+  let whatSensor;
   if (!c) return;
   switch (cd.type) {
     case Component_Type.kSwitch:
@@ -680,10 +695,11 @@ function updateComponent(cd) {
       updateInnerText(el(c, "head"), headText);
       setValueIfNotModified(el(c, "name"), cd.name);
       el(c, "state").checked = cd.state;
-      if (cd.apower !== undefined) {
-        updateInnerText(
-            el(c, "power_stats"), `${Math.round(cd.apower)}W, ${cd.aenergy}Wh`);
-        el(c, "power_stats_container").style.display = "block";
+      updatePowerStats(c, cd);
+      if (cd.type == Component_Type.kSwitch ||
+          cd.type == Component_Type.kOutlet) {
+        el(c, "hk_state_inverted_container").style.display = "block";
+        checkIfNotModified(el(c, "hk_state_inverted"), cd.hk_state_inverted);
       }
       if (cd.type == Component_Type.kLightBulb) {
         checkIfNotModified(el(c, "svc_hidden"), cd.svc_hidden);
@@ -737,8 +753,19 @@ function updateComponent(cd) {
       if (cd.type == Component_Type.kLightBulb) {
         if (cd.bulb_type == LightBulbController_BulbType.kCCT) {
           headText = "CCT";
+          if (lastInfo.model == "ShellyRGBW2") {
+            if (cd.id == 1) {
+              headText += " R/G";
+            } else {
+              headText += " B/W";
+            }
+          }
         } else if (cd.bulb_type == LightBulbController_BulbType.kRGBW) {
-          headText = "RGB";
+          if (lastInfo.sys_mode == 4) {
+            headText = "RGBW";
+          } else {
+            headText = "RGB";
+          }
         } else {
           headText = "Light";
         }
@@ -746,12 +773,7 @@ function updateComponent(cd) {
         updateInnerText(el(c, "head"), headText);
         setValueIfNotModified(el(c, "name"), cd.name);
         el(c, "state").checked = cd.state;
-        if (cd.apower !== undefined) {
-          updateInnerText(
-              el(c, "power_stats"),
-              `${Math.round(cd.apower)}W, ${cd.aenergy}Wh`);
-          el(c, "power_stats_container").style.display = "block";
-        }
+        updatePowerStats(c, cd);
         slideIfNotModified(el(c, "color_temperature"), cd.color_temperature);
         slideIfNotModified(el(c, "hue"), cd.hue);
         slideIfNotModified(el(c, "saturation"), cd.saturation);
@@ -882,10 +904,19 @@ function updateComponent(cd) {
       break;
     }
     case Component_Type.kMotionSensor:
+      whatSensor = whatSensor || "motion";
     case Component_Type.kOccupancySensor:
+      whatSensor = whatSensor || "occupancy";
     case Component_Type.kContactSensor:
+      whatSensor = whatSensor || "contact";
     case Component_Type.kLeakSensor:
-    case Component_Type.kSmokeSensor: {
+      whatSensor = whatSensor || "leak";
+    case Component_Type.kSmokeSensor:
+      whatSensor = whatSensor || "smoke";
+    case Component_Type.kCarbonMonoxideSensor:
+      whatSensor = whatSensor || "carbon monoxide";
+    case Component_Type.kCarbonDioxideSensor: {
+      whatSensor = whatSensor || "carbon dioxide";
       let headText = `Input ${cd.id}`;
       if (cd.name) headText += ` (${cd.name})`;
       updateInnerText(el(c, "head"), headText);
@@ -896,8 +927,8 @@ function updateComponent(cd) {
       setValueIfNotModified(el(c, "idle_time"), cd.idle_time);
       el(c, "idle_time_container").style.display =
           (cd.in_mode == 0 ? "none" : "block");
-      let what = (cd.type == 7 ? "motion" : "occupancy");
-      let statusText = (cd.state ? `${what} detected` : `no ${what} detected`);
+      let statusText =
+          (cd.state ? `${whatSensor} detected` : `no ${whatSensor} detected`);
       if (cd.last_ev_age > 0) {
         statusText += `; last ${secondsToDateString(cd.last_ev_age)} ago`;
       }
@@ -965,6 +996,8 @@ function updateElement(key, value, info) {
     case "wifi1_netmask":
     case "wifi_gw":
     case "wifi1_gw":
+    case "wifi_nameserver":
+    case "wifi1_nameserver":
       setValueIfNotModified(el(key), value);
       break;
     case "wifi_ip":
@@ -1089,6 +1122,15 @@ function updateElement(key, value, info) {
   }
 }
 
+function updatePowerStats(c, cd) {
+  if (cd.apower === undefined) return;
+
+  apower = Math.round(cd.apower * 10) / 10;
+  console.log(apower)
+  updateInnerText(el(c, "power_stats"), `${apower}W, ${cd.aenergy}Wh`);
+  el(c, "power_stats_container").style.display = "block";
+}
+
 function getInfo() {
   return new Promise(function(resolve, reject) {
     if (pendingGetInfo) {
@@ -1198,7 +1240,7 @@ function setupHost() {
 function reloadPage() {
   // If path or query string were set (e.g. '/ota'), reset them.
   let newHREF = `http://${location.host}/`;
-  if (location.href != newHREF) {
+  if (location.href != newHREF && !location.href.startsWith("file://")) {
     location.replace(newHREF);
   } else {
     location.reload();
